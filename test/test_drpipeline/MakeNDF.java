@@ -188,8 +188,9 @@ public class MakeNDF
            final double d1 = 1.7; 
            final double d2 = 2.5;
            
-           final double glitch_starting = 1000;
-           final double glitch_endding = 1800;
+           final double glitch_starting = 250;
+           final double glitch_width = 20;
+           final double glitch_endding = glitch_starting+glitch_width;
  
            final boolean Reverse = true;
 
@@ -295,7 +296,7 @@ public class MakeNDF
                      {
                         f1 = (500+jjj*fac) * Math.PI / SS_LEN;
                         p1 = d0 + d1 * f1 + d2 * f1 *f1;
-                        a1 = 200*f1*f1;
+                        a1 = 30*f1*f1;
                         glitch_err += a1*Math.cos(f1*x + p1);
                         glitch_err0 += a1*Math.cos(f1*x0);
                      }

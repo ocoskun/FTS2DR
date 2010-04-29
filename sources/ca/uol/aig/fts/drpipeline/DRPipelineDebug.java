@@ -100,8 +100,8 @@ public class DRPipelineDebug
             int new_ssSize = pc2fts.get_ssLength();
             fft2fts = new RealDoubleFFT_Even(new_ssSize+1);
 
-            int tail_starting = index_ZPD + 2*dsSize;
-            deglitch2fts = new Deglitching(tail_starting);
+//            int tail_starting = index_ZPD + pc_dsSize;
+            deglitch2fts = new Deglitching(pc_dsSize, index_ZPD);
       }
       
       public void dataReduction_Debug(int index_w, int index_l, boolean deglitch_flag)

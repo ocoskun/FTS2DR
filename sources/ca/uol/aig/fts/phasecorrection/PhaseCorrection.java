@@ -223,6 +223,8 @@ public class PhaseCorrection
           }
           weights[cSpectrum.x.length-1] = 0.0;
 
+          if(weight_max <=0) weight_max = 1;
+
           double[] phase = new double[cSpectrum.x.length];
           double phase_t;
           for(int i=0; i<cSpectrum.x.length; i++)
@@ -320,20 +322,20 @@ public class PhaseCorrection
                weights[i] = phase_weights[2*(dsLength+1)+i];
                if(i>0 && (wavenumber[i]-wavenumber[i-1]>1)) 
                { 
-//                  System.out.println("band: " + i  + " >>> " + (i - bandIndex[bandNumber]));
-                    if(i-bandIndex[bandNumber]>=phaseFittingdegree) bandNumber++; 
-                    bandIndex[bandNumber] = i;
+                    if((i-bandIndex[bandNumber])>phaseFittingdegree) 
+                    {
+                         bandNumber++; 
+                         bandIndex[bandNumber] = i;
+                    }
                }
           }
-          if(NPoints-bandIndex[bandNumber]>=phaseFittingdegree) 
+          if((NPoints-bandIndex[bandNumber])>phaseFittingdegree) 
           {
                bandNumber++;
                bandIndex[bandNumber] = NPoints;
           }
 
           PolynomialFitting pnf = new PolynomialFitting(phaseFittingdegree);
-
-//          System.out.println("band number = " + bandNumber);
 
           if(bandNumber > 1)
           {
@@ -348,6 +350,8 @@ public class PhaseCorrection
               }
               middle_points[bandNumber] = wavenumber[NPoints-1];
          
+//              System.out.println("num of bands = " + bandNumber);
+
               double[][] middle_phase = new double[bandNumber][2];
               for(int i=0; i<bandNumber; i++)
               {
@@ -361,20 +365,24 @@ public class PhaseCorrection
                   double[] band_Weights = new double[num_points];
                   System.arraycopy(weights, bandIndex[i], band_Weights, 0, num_points);
 
+//                  System.out.println("band No. = " + i);
                   pnf.fit(band_Wavenumber, band_Phase, band_Weights);
+/*
+                  for(int jj=0; jj<band_Wavenumber.length; jj++)
+                  {
+                        System.out.println(band_Wavenumber[jj] + ":" +
+                                          band_Phase[jj] + ":" + band_Weights[jj]);
+                  }
+*/
+
                   double[] fittingParam = pnf.getFittingParam();
                   constantPhase[i] = fittingParam[0];
 
                   middle_phase[i][0] = pnf.getResult(middle_points[i]);
                   middle_phase[i][1] = pnf.getResult(middle_points[i+1]);
               }
-/*
-              for(int i=1; i<bandNumber; i++) 
-              {
-                  System.out.println("**** " + i + ":" + middle_phase[i-1][1] 
-                                   + ", " + middle_phase[i][0]);
-              }
-*/
+
+
               double[] bandPhase_Inc = new double[bandNumber];
               bandPhase_Inc[0] = 0;
 
@@ -386,10 +394,8 @@ public class PhaseCorrection
                   else interval = (int)((middle_phase[i][0]-middle_phase[i-1][1])/Math.PI-0.4444);
                   bandPhase_Inc[i] = bandPhase_Inc[i-1] - interval * Math.PI;
               }
-/*
-              for(int i=0; i<bandNumber; i++) System.out.print(bandPhase_Inc[i] + ":");
-              System.out.println();
-*/
+
+
               for(int i=0; i<bandNumber; i++)
               {
                   for(int k=bandIndex[i]; k<bandIndex[i+1]; k++)
@@ -403,7 +409,7 @@ public class PhaseCorrection
 
           pnf.fit(wavenumber, phase, weights);
 
-//          System.out.println("std error = " + pnf.getSTDDev());
+//        System.out.println("std error = " + pnf.getSTDDev());
           stderr[0] = pnf.getSTDDev();
 
           double[] new_wavenumber = new double[dsLength+1];

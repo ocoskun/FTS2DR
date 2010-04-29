@@ -11,6 +11,7 @@ public class PolynomialFitting
      double[] fittingParam = null;
 
      double[] x_orig = null, y_orig = null, weights_orig = null;
+
      /**
       * Constructor.
       * @param polyDegree the degree of the fitting polynomial.
@@ -20,6 +21,7 @@ public class PolynomialFitting
           this.polyDegree = polyDegree;
           fittingParam = new double[polyDegree+1]; 
      }
+
      /* get the matrix (left side) of the linear equation */
      double[][] getCoeff(double[] x, double[] weights)
      {
@@ -42,6 +44,7 @@ public class PolynomialFitting
              }
           return matrixElement;
      }
+
      /* get the right side of the linear equation */
      double[] getValue(double[] x, double[] y, double[] weights)
      {
@@ -59,6 +62,7 @@ public class PolynomialFitting
           } 
           return value; 
      }
+
      /*  dot product of two 1-D arrays */
      double[] dotProduct(double[] x, double[] y)
      {
@@ -69,6 +73,7 @@ public class PolynomialFitting
           }
           return z;
      }
+
      /* the sum of all elements of a 1-D array */
      double sumArray(double[] x)
      {
@@ -76,13 +81,17 @@ public class PolynomialFitting
           for(int i=0; i<x.length; i++) sum += x[i];
           return sum;
      }
+
      /**
       *  use these parameters to get a least square fitting.
       * @param x the coordinates.
       * @param y the values, y = y(x).
       * @param weights the weights of every x.
+      * @return the status of the fitting. If the return status is false,
+      *      the fitting is not successful; otherwise, the fitting is
+      *      successful.
       */
-     public void fit(double[] x, double[] y, double[] weights)
+     public boolean fit(double[] x, double[] y, double[] weights)
      {
           x_orig = x;
           y_orig = y;
@@ -90,7 +99,23 @@ public class PolynomialFitting
           Matrix lsf_matrix = new Matrix(getCoeff(x, weights));
           double[] value = getValue(x, y, weights);
           Matrix lsf_value  = new Matrix(value, value.length);
-          fittingParam = lsf_matrix.solve(lsf_value).getColumnPackedCopy();
+
+          try
+          {
+               fittingParam = lsf_matrix.solve(lsf_value).getColumnPackedCopy();
+          }
+          catch(Exception e)
+          {
+               e.printStackTrace();
+               System.err.println("The fitting may not be successful!!!");
+/*
+               for(int i=0; i<fittingParam.length; i++)
+               {
+                    System.out.println(i + ": " + fittingParam[i]);
+               }
+*/
+          }
+          return true;
      }
 
      /**
