@@ -13,7 +13,8 @@ public class MakeNDF_1
      int arrayWidth = 40;
      int arrayLength = 32;
      double x_interval = 0.1;
-
+     String fits[];
+     String wcs[];
      HDSObject hdsInterferogram;
 
      public MakeNDF_1(String interferogramFile) 
@@ -26,7 +27,27 @@ public class MakeNDF_1
                                   interferogramFile.lastIndexOf("/")+1, 
                                   interferogramFile.length());
               hdsInterferogram = HDSObject.hdsOpen(interferogramFile,"UPDATE");
-
+             fits = hdsInterferogram.datFind("MORE").datFind("FITS").datGetvc();
+              for(int i=0; i<fits.length; i++)
+              {
+                  System.out.println(fits[i]);
+                  if (fits[i].startsWith("RECIPE"))
+                  {
+                      fits[i] = "RECIPE  = 'REDUCE_FTS_SCAN'";
+                      //break;
+                  }
+                  if (fits[i].startsWith("FTS_CONN"))
+                  {
+                      fits[i] = "FTS_CONN=                    T / True if FTS is used";
+                      //break;
+                  }
+              }
+              hdsInterferogram.datFind("MORE").datFind("FITS").datPutvc(fits);
+             wcs = hdsInterferogram.datFind("WCS").datFind("DATA").datGetvc();
+             for(int i=0; i<fits.length; i++)
+              {
+                  System.out.println(wcs[i]);
+              }
           }
           catch(HDSException e)
           {
@@ -88,7 +109,7 @@ public class MakeNDF_1
          try
          {
               hdsInterferogram.datFind("DATA_ARRAY").datErase("DATA");
-              hdsInterferogram.datFind("DATA_ARRAY").datNew("DATA", "_REAL", dims);
+              hdsInterferogram.datFind("DATA_ARRAY").datNew("DATA", "_DOUBLE", dims);
               hdsInterferogram.datFind("DATA_ARRAY").datFind("DATA").datPutvr(spectrum);
          }
          catch(HDSException e)

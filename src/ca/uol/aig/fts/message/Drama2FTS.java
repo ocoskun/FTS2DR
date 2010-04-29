@@ -85,16 +85,61 @@ class SetParametersAction implements DramaTask.Action
     {
          Arg arg = t.GetArgument();
 
-         DataReductionParameters.pc_pcfSize_h = arg.IntValue("pcfSize_h");
-         DataReductionParameters.pc_dsSize = arg.IntValue("dsSize");
-         DataReductionParameters.pc_ssSize = arg.IntValue("ssSize");
-         DataReductionParameters.pc_phaseFittingdegree = arg.IntValue("fittingDegree");
-         DataReductionParameters.pc_weight_limit = arg.RealValue("weight_limit");
-         DataReductionParameters.pc_wn_lBound_percent = arg.RealValue("wn_lBound");
-         DataReductionParameters.pc_wn_uBound_percent = arg.RealValue("wn_uBound");
-         DataReductionParameters.pc_deglitch = arg.IntValue("deglitch");
-         DataReductionParameters.pc_numThread = arg.IntValue("numThread");
-
+         try {
+             DataReductionParameters.pc_pcfSize_h = arg.IntValue("pcfSize_h");
+         }
+         catch (DramaException e) {
+             DataReductionParameters.pc_pcfSize_h = 60;
+         }
+         try {
+             DataReductionParameters.pc_dsSize = arg.IntValue("dsSize");
+         }
+         catch (DramaException e) {
+              DataReductionParameters.pc_dsSize = 300;
+         }
+         try {
+              DataReductionParameters.pc_ssSize = arg.IntValue("ssSize");
+         }
+         catch (DramaException e) {
+              DataReductionParameters.pc_ssSize = 6000;
+         }
+         try {
+             DataReductionParameters.pc_phaseFittingdegree = arg.IntValue("fittingDegree");
+         }
+         catch (DramaException e) {
+             DataReductionParameters.pc_phaseFittingdegree = 2;
+         }
+         try {
+             DataReductionParameters.pc_weight_limit = arg.RealValue("weight_limit");
+         }
+         catch (DramaException e) {
+             DataReductionParameters.pc_weight_limit = 0.1;
+         }
+         try{
+             DataReductionParameters.pc_wn_lBound_percent = arg.RealValue("wn_lBound");
+         }
+         catch (DramaException e) {
+             DataReductionParameters.pc_wn_lBound_percent = 5.0;
+         }
+         try {
+             DataReductionParameters.pc_wn_uBound_percent = arg.RealValue("wn_uBound");
+         }
+         catch (DramaException e) {
+             DataReductionParameters.pc_wn_uBound_percent = 95.0;
+         }
+         try {
+             DataReductionParameters.pc_deglitch = arg.IntValue("deglitch");
+         }
+         catch (DramaException e) {
+             DataReductionParameters.pc_deglitch = 3;
+         }
+         try {
+             DataReductionParameters.pc_numThread = arg.IntValue("numThread");
+         }
+         catch (DramaException e) {
+             DataReductionParameters.pc_numThread = 4;
+         }
+         
          t.PutRequestEnd();
     }
 }
