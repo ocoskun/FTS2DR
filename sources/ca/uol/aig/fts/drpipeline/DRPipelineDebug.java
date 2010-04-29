@@ -41,12 +41,15 @@ public class DRPipelineDebug
        */
       public int pc_pcfSize;
 
-
+      public double[] mirror_pos_debug = null;
+      public double[] ifgm_debug = null;
       public double[] phase_orig_debug = null;
       public double[] phase_fitting_debug = null;
       public double[] intensity_square_orig_debug = null;
       public double[] pcf_debug = null;
       public double[] spectrum_debug = null;
+      public double phaseFittingStdErr_debug = 0;
+      public double newInterval_ifgm_debug = 0;
 
       CubicSplineInterpolation csi2fts = null;
       PhaseCorrection pc2fts = null;
@@ -69,8 +72,11 @@ public class DRPipelineDebug
 
             /* get the original irregular mirror positions */
             mirrorPos = ndf_ifgm.getMirrorPos();
+            mirror_pos_debug = mirrorPos;
 
             csi2fts = new CubicSplineInterpolation(mirrorPos);
+
+            newInterval_ifgm_debug = csi2fts.getNewInterval();
 
             int index_ZPD = csi2fts.getIndex_ZPD(zpd_value);
             int interferogram_len = csi2fts.getInterferogramLength();
@@ -93,12 +99,15 @@ public class DRPipelineDebug
             /* interpolation of interferograms */
             double[] single_ifgm;
             single_ifgm = ndf_ifgm.getInterferogram(index_w, index_l);
+            ifgm_debug = single_ifgm;
+
             double[] ifgm_interp = csi2fts.interpolate(single_ifgm);
 
             double[] fittingStderr = new double[1];
             double[] ifgm_pc = pc2fts.getInterferogram(ifgm_interp, fittingStderr);
-            System.out.println("std error of phase fitting = " + fittingStderr[0]);
+//            System.out.println("std error of phase fitting = " + fittingStderr[0]);
 
+            phaseFittingStdErr_debug = fittingStderr[0];
             phase_orig_debug = pc2fts.phase_orig_debug;
             phase_fitting_debug = pc2fts.phase_fitting_debug;
             intensity_square_orig_debug = pc2fts.intensity_square_orig_debug;

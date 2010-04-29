@@ -7,8 +7,8 @@ import java.io.*;
 public class MakeNDF 
 {
 
-     int arrayWidth = 40;
-     int arrayLength = 32;
+     int arrayWidth = 4;
+     int arrayLength = 4;
      double x_interval = 0.1;
 
      HDSObject hdsInterferogram;
@@ -171,6 +171,7 @@ public class MakeNDF
            }
      }
 
+
      void createTestData()
      {
 
@@ -181,12 +182,15 @@ public class MakeNDF
            final int nPoints_Ifgm = DS_LEN + SS_LEN + PCF_LEN;
            final int LEFT_SHIFT = DS_LEN;
 
-           final double NS_Ratio = 0.2;
-           final double POS_FLUC = 0.1;
+           final double NS_Ratio = 0.2*0;
+           final double POS_FLUC = 0.1*0;
            final double d0 = 0.1*(2.0*Math.PI);
            final double d1 = 1.7; 
            final double d2 = 2.5;
            
+           final double glitch_starting = 1000;
+           final double glitch_endding = 1200;
+ 
            final boolean Reverse = true;
 
 //         Random gen_rand = new Random(199500);
@@ -276,18 +280,35 @@ public class MakeNDF
                 {
                      f1 = (0+jjj*fac) * Math.PI / SS_LEN;
                      p1 = d0 + d1 * f1 + d2 * f1 *f1;
-                     a1 = 5.0;
+                     a1 = 20.0;
                      cc += a1*Math.cos(f1*x + p1);
                      cc0 += a1*Math.cos(f1*x0);
                 }
 
-                total0 = aa0 + bb0 + cc0;
+                double glitch_err = 0, glitch_err0 = 0;
+                fac = 0.5;
+                fn = (int)((5000-1000)/fac);
+
+                if(x>=glitch_starting && x<=glitch_endding)
+                {
+                     for(int jjj=0;jjj<fn;jjj++)
+                     {
+                        f1 = (500+jjj*fac) * Math.PI / SS_LEN;
+                        p1 = d0 + d1 * f1 + d2 * f1 *f1;
+                        a1 = 100*f1*f1;
+                        glitch_err += a1*Math.cos(f1*x + p1);
+                        glitch_err0 += a1*Math.cos(f1*x0);
+                     }
+                }
+
+
+                total0 = aa0 + bb0 + cc0 + glitch_err0;
                 if(Reverse)
                     ifgm0[nPoints_Ifgm-k-1] = (float)total0;
                 else
                     ifgm0[k] = (float)total0;
 
-                total = aa + bb + cc;
+                total = aa + bb + cc + glitch_err;
 /*
                 rand_coeff = NS_Ratio*(gen_rand.nextDouble());
                 total += rand_coeff*total;

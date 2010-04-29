@@ -15,8 +15,11 @@ public class PlotXY extends JPanel
 
      double[][] x_add_left = new double[10][], y_add_left = new double[10][];
      double[][] x_add_right = new double[10][], y_add_right = new double[10][];
-     int num_add_left = 0;
-     int num_add_right = 0;
+//     int num_add_left = 0;
+//     int num_add_right = 0;
+
+     int num_Curves_left = 0;
+     int num_Curves_right = 0;
 
      double x_min_bottom, x_max_bottom;
      double y_min_right, y_max_right, y_min_left, y_max_left;
@@ -33,7 +36,7 @@ public class PlotXY extends JPanel
 
      public PlotXY(String title)
      {
-         setPreferredSize(new Dimension(400, 250));
+         setPreferredSize(new Dimension(400, 200));
          setBackground(Color.WHITE);
          this.title = title;
          this.width = getWidth();
@@ -98,7 +101,7 @@ public class PlotXY extends JPanel
                  }
              }
          }
-
+/*
          for(int i=0; i<num_add_left; i++)
          {
              g.setColor(new Color(255, (i*100)%256, 30));
@@ -109,6 +112,7 @@ public class PlotXY extends JPanel
              g.setColor(new Color(30, (i*100)%256, 255));
              drawSingleCurve(x_add_right[i], y_add_right[i], 'r', '.');
          }
+*/
      }
 
      private void drawSingleCurve(double[] x, double[] y, char left_right, char linepoint)
@@ -217,7 +221,7 @@ public class PlotXY extends JPanel
              y_coord = y_min_left + i * ((y_max_left-y_min_left)/(major_ytick-1));
              String y_str = String.format("%1$5.2e", y_coord);
              g.setColor(Color.RED);
-             g.drawString(y_str, 10, y_tick);
+             if(num_Curves_left > 0) g.drawString(y_str, 10, y_tick);
 
              g.setColor(Color.BLACK);
              if(i<major_ytick-1)
@@ -248,7 +252,7 @@ public class PlotXY extends JPanel
               y_coord = y_min_right + i * ((y_max_right-y_min_right)/(major_ytick-1));
               String y_str = String.format("%1$5.2e", y_coord);
               g.setColor(Color.BLUE);
-              g.drawString(y_str, width-leftmargin+2, y_tick);
+              if(num_Curves_right > 0) g.drawString(y_str, width-leftmargin+2, y_tick);
 
               g.setColor(Color.BLACK);
               if(i<major_ytick-1)
@@ -291,6 +295,7 @@ public class PlotXY extends JPanel
 
          if(yleft != null)
          {
+             num_Curves_left = yleft.length;
              y_min_left = 1.0e99;
              y_max_left = -1.0e99;
              for(int i=0; i<yleft.length; i++)
@@ -308,6 +313,7 @@ public class PlotXY extends JPanel
 
          if(yright != null)
          {
+             num_Curves_right = yright.length;
              y_min_right = 1.0e99;
              y_max_right = -1.0e99;
              for(int i=0; i<yright.length; i++)
@@ -329,6 +335,7 @@ public class PlotXY extends JPanel
      {
          return a>=leftmargin && a<=width-rightmargin && b>=topmargin && b<=height-bottommargin;
      }
+/*
      public void addPlot(double[] x, double[] y, Color lineColor, char right_left)
      {
          if(x == null) return;
@@ -348,6 +355,7 @@ public class PlotXY extends JPanel
          }
          repaint();
      }
+*/
      public double[] getRange_x()
      {
          double[] t = new double[2];

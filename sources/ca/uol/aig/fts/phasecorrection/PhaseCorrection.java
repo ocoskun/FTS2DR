@@ -25,6 +25,7 @@ public class PhaseCorrection
      private RealDoubleFFT_Even pc_rfft_e = null;
      private RealDoubleFFT_Odd  pc_rfft_o = null;
      
+//   public int dsLength_debug, ssLength_debug, pcfSize_h_debug;
      /**
       * Constructor.
       * @param dsLength the half size of the double-sided interferogram.
@@ -49,10 +50,11 @@ public class PhaseCorrection
           pc_rfft   = new RealDoubleFFT(2*dsLength);
           pc_rfft_e = new RealDoubleFFT_Even(dsLength+1);
           pc_rfft_o = new RealDoubleFFT_Odd(dsLength-1);
-
+/*
           System.out.println("Phase Correction: dsLength = " + this.dsLength +
                                              ", ssLength = " + this.ssLength +
                                               ", pcfSize = " + 2*this.pcfSize_h);
+*/
      }
 
      /**
@@ -100,11 +102,11 @@ public class PhaseCorrection
           pc_rfft   = new RealDoubleFFT(2*this.dsLength);
           pc_rfft_e = new RealDoubleFFT_Even(this.dsLength+1);
           pc_rfft_o = new RealDoubleFFT_Odd(this.dsLength-1);
-
+/*
           System.out.println("Phase Correction: dsLength = " + this.dsLength +
                                              ", ssLength = " + this.ssLength +
                                              ", pcfSize  = " + 2*this.pcfSize_h);
-
+*/
      }
 
      /* get a new dsLength when the original dsLength is not a good number for FFT */
@@ -161,7 +163,8 @@ public class PhaseCorrection
       */
      public int get_pcfSize()
      {
-         return 2*pcfSize_h;
+          if(pcfSize_h >= dsLength) return 2*dsLength;
+          else return 2*pcfSize_h;
      }
 
 
