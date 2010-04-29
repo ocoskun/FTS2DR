@@ -45,13 +45,11 @@ public class MakeNDF
      {
           try
           {
-              long[] dims = new long[1],  dimx = new long[0];
+              long[] dims = new long[1];
               dims[0] = pos.length;
-
-              HDSObject hdsPos;
-              
-              hdsInterferogram.datNew("MORE", "EXT", dimx); 
-              hdsInterferogram.datFind("MORE").datNew("JCMTSTATE", "RTS_ARR", dimx);
+             
+              hdsInterferogram.datNew("MORE", "EXT", new long[0]); 
+              hdsInterferogram.datFind("MORE").datNew("JCMTSTATE", "RTS_ARR", new long[0]);
               hdsInterferogram.datFind("MORE").datFind("JCMTSTATE").datNew("FTS_POS", "_REAL", dims);
               hdsInterferogram.datFind("MORE").datFind("JCMTSTATE").datFind("FTS_POS").datPutvr(pos);
           }

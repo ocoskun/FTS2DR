@@ -2,7 +2,6 @@ package ca.uol.aig.fts.io;
 
 import uk.ac.starlink.hds.HDSObject;
 import uk.ac.starlink.hds.HDSException;
-import java.util.StringTokenizer;
 /**
  * Read an interferogram file and create a spectrum file.
  * @author Baoshe Zhang
@@ -38,29 +37,35 @@ public class Scuba2NDFIO extends ca.uol.aig.fts.io.DataIO
               hdsInterferogram = HDSObject.hdsOpen(interferogramFile, "READ");
 
               /* create a new spectrum NDF file. */
-              long[] dims = new long[0];
-
               if(spectrumFile != null)
               {
                    /* get the filename of the raw data file */
                    String spectrumFile_rel = spectrumFile.substring(spectrumFile.lastIndexOf("/")+1, 
                                                                spectrumFile.length());
-                   hdsSpectrum = HDSObject.hdsNew(spectrumFile, spectrumFile_rel, "NDF", dims);
+                   hdsSpectrum = HDSObject.hdsNew(spectrumFile, spectrumFile_rel, "NDF", new long[0]);
 
                    /* create a structure 'DATA_ARRAY' in this file. */
-                   hdsSpectrum.datNew("DATA_ARRAY", "ARRAY", dims);
-
-                   /* if the structure 'MORE' exists in the interferogram file, save this structure to
-                     the spectrum NDF file.
+                   hdsSpectrum.datNew("DATA_ARRAY", "ARRAY", new long[0]);
+            
+                   /* if the structure 'MORE,WCS,QUALITY' exists in the interferogram file, 
+                      save this structure to the spectrum NDF file.
                    */
                    if(hdsInterferogram.datThere("MORE"))
                    {
-                       HDSObject hdsMore;
-                       hdsMore = hdsInterferogram.datFind("MORE");
-                       hdsMore.datCopy(hdsSpectrum, "MORE");
+                       hdsInterferogram.datFind("MORE").datCopy(hdsSpectrum, "MORE");
                    }
+                   if(hdsInterferogram.datThere("WCS"))
+                   {
+                       hdsInterferogram.datFind("WCS").datCopy(hdsSpectrum, "WCS");
+                   }
+                   if(hdsInterferogram.datThere("QUALITY"))
+                   {
+                       hdsInterferogram.datFind("QUALITY").datCopy(hdsSpectrum, "QUALITY");
+                   }                   
+                   /* create a structure 'More.FTS2DR' for storing FTS-specific info */
+                   hdsSpectrum.datFind("More").datNew("FTS2DR", "EXT", new long[0]);
               }
-
+              
               /* get the dimensions and data type of about interferogram cube and an pointer to the actual
                  interferogram cube. 
               */
@@ -286,14 +291,23 @@ public class Scuba2NDFIO extends ca.uol.aig.fts.io.DataIO
                    System.out.println("The data type is not supported! And the data is not saved!!!");
               }
 
-              double[] waveNumber = new double[nPoints_Ifgm];
-              long[] wnDims = new long[1];
+//              double[] waveNumber = new double[nPoints_Ifgm];
+//              long[] wnDims = new long[0];
+/*              
               wnDims[0] = nPoints_Ifgm;
               for(int i=0; i<nPoints_Ifgm; i++)
                   waveNumber[i] = i*wn_unit/(nPoints_Ifgm-1);
-              hdsSpectrum.datFind("MORE").datFind("JCMTSTATE").datErase("FTS_POS");
-              hdsSpectrum.datFind("MORE").datFind("JCMTSTATE").datNew("FTS_WN", "_DOUBLE", wnDims);
-              hdsSpectrum.datFind("MORE").datFind("JCMTSTATE").datFind("FTS_WN").datPutvd(waveNumber);
+*/
+/*              
+              if(hdsInterferogram.datThere("MORE"))
+              {
+                  hdsInterferogram.datFind("MORE").datCopy(hdsSpectrum, "MORE");
+              }
+ */ 
+//              hdsSpectrum.datFind("More").datNew("FTS2DR_EXT", "EXT", new long[0]);
+//              hdsSpectrum.datFind("MORE").datFind("JCMTSTATE").datErase("FTS_POS");
+              hdsSpectrum.datFind("MORE").datFind("FTS2DR").datNew("FTS_WN", "_DOUBLE", new long[0]);
+              hdsSpectrum.datFind("MORE").datFind("FTS2DR").datFind("FTS_WN").datPut0d(wn_unit);
          }
          catch(HDSException e)
          {
@@ -333,8 +347,8 @@ public class Scuba2NDFIO extends ca.uol.aig.fts.io.DataIO
                            index++;
                        }
 
-                   hdsSpectrum.datFind("MORE").datFind("JCMTSTATE").datNew("FTS_FPM", "_REAL", dims);
-                   hdsSpectrum.datFind("MORE").datFind("JCMTSTATE").datFind("FTS_FPM").datPutvr(params_fitting);
+                   hdsSpectrum.datFind("MORE").datFind("FTS2DR").datNew("FTS_FPM", "_REAL", dims);
+                   hdsSpectrum.datFind("MORE").datFind("FTS2DR").datFind("FTS_FPM").datPutvr(params_fitting);
               }
               else if(fittingParam instanceof double[][][])
               {
@@ -360,8 +374,8 @@ public class Scuba2NDFIO extends ca.uol.aig.fts.io.DataIO
                            index++;
                        }
                    
-                   hdsSpectrum.datFind("MORE").datFind("JCMTSTATE").datNew("FTS_FPM", "_REAL", dims);
-                   hdsSpectrum.datFind("MORE").datFind("JCMTSTATE").datFind("FTS_FPM").datPutvr(params_fitting);
+                   hdsSpectrum.datFind("MORE").datFind("FTS2DR").datNew("FTS_FPM", "_REAL", dims);
+                   hdsSpectrum.datFind("MORE").datFind("FTS2DR").datFind("FTS_FPM").datPutvr(params_fitting);
               }
               else
               {
@@ -404,8 +418,8 @@ public class Scuba2NDFIO extends ca.uol.aig.fts.io.DataIO
                           stdError_fitting[index] = stdError[i][j];
                           index++;
                       }
-                   hdsSpectrum.datFind("MORE").datFind("JCMTSTATE").datNew("FTS_STD", "_REAL", dims);
-                   hdsSpectrum.datFind("MORE").datFind("JCMTSTATE").datFind("FTS_STD").datPutvr(stdError_fitting);
+                   hdsSpectrum.datFind("MORE").datFind("FTS2DR").datNew("FTS_STD", "_REAL", dims);
+                   hdsSpectrum.datFind("MORE").datFind("FTS2DR").datFind("FTS_STD").datPutvr(stdError_fitting);
               }
               else if(fittingSTDError instanceof double[][])
               {
@@ -426,8 +440,8 @@ public class Scuba2NDFIO extends ca.uol.aig.fts.io.DataIO
                            stdError_fitting[index] = (float)stdError[i][j];
                            index++;
                        }
-                   hdsSpectrum.datFind("MORE").datFind("JCMTSTATE").datNew("FTS_STD", "_REAL", dims);
-                   hdsSpectrum.datFind("MORE").datFind("JCMTSTATE").datFind("FTS_STD").datPutvr(stdError_fitting);
+                   hdsSpectrum.datFind("MORE").datFind("FTS2DR").datNew("FTS_STD", "_REAL", dims);
+                   hdsSpectrum.datFind("MORE").datFind("FTS2DR").datFind("FTS_STD").datPutvr(stdError_fitting);
 
               }
               else
@@ -464,6 +478,7 @@ public class Scuba2NDFIO extends ca.uol.aig.fts.io.DataIO
       * @param compositeName the composite name of the new data separated by #, e.g., XYZ#ABC#XNAME.
       * @param obj  the value of this new data. Possible data types: String, int, double.
       */ 
+/*
      public void newDataToSpectrum(String compositeName, Object obj)
      {
           StringTokenizer st = new StringTokenizer(compositeName, "#");
@@ -505,4 +520,5 @@ public class Scuba2NDFIO extends ca.uol.aig.fts.io.DataIO
               System.out.println(e);
           }
      }
+ */
 }

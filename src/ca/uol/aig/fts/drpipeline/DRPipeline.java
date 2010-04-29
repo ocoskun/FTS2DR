@@ -392,7 +392,8 @@ public class DRPipeline
 
             /* save the spectrum to a file */
             double wn_unit = 0;
-            if(csi2fts.getNewInterval() != 0) wn_unit = 1.0D/csi2fts.getNewInterval();
+            if(csi2fts.getNewInterval() != 0) 
+                wn_unit = 1.0D/csi2fts.getNewInterval()/(2*(ifgm_pc[0][0].length-1));
 
             ndf_ifgm.saveSpectrum(ifgm_pc, wn_unit);
             ndf_ifgm.saveFittingParam(phaseFitting_param);
@@ -469,7 +470,8 @@ public class DRPipeline
 
             /* save the spectrum to a file */
             double wn_unit = 0;
-            if(csi2fts.getNewInterval() != 0) wn_unit = 1.0D/csi2fts.getNewInterval();
+            if(csi2fts.getNewInterval() != 0) 
+                wn_unit = 1.0D/csi2fts.getNewInterval()/(2*(ifgm_pc[0][0].length-1));
 
             ndf_ifgm.saveSpectrum(ifgm_pc, wn_unit);
             ndf_ifgm.saveFittingParam(phaseFitting_param);
@@ -571,7 +573,8 @@ public class DRPipeline
 
             /* save the spectrum to a file */
             double wn_unit = 0;
-            if(csi2fts.getNewInterval() != 0) wn_unit = 1.0D/csi2fts.getNewInterval();
+            if(csi2fts.getNewInterval() != 0) 
+                wn_unit = 1.0D/csi2fts.getNewInterval()/(2*(ifgm_pc[0][0].length-1));
 
             ndf_ifgm.saveSpectrum(ifgm_pc, wn_unit);
             ndf_ifgm.saveFittingParam(phaseFitting_param);
