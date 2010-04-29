@@ -1,3 +1,0 @@
-echo "compiling MakeNDF ..." && javac MakeNDF.java
-echo "compiling TestDRPipeline..." && javac TestDRPipeline.java
-echo "compiling TestSpectrum... " && javac TestSpectrum.java

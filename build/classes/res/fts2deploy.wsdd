@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<deployment name="defaultServerConfig" 
+    xmlns="http://xml.apache.org/axis/wsdd/" 
+    xmlns:java="http://xml.apache.org/axis/wsdd/providers/java" 
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+    <service name="SOAP2FTS" provider="Handler" use="literal" style="rpc">
+        <parameter name="className" value="ca.uol.aig.fts.message.SOAP2FTS"/>
+        <parameter name="allowedMethods" value="*"/>
+        <parameter name="handlerClass" value="org.globus.axis.providers.RPCProvider"/>
+        <parameter name="scope" value="Application"/>
+        <parameter name="providers" value="GetRPProvider"/>
+        <parameter name="loadOnStartup" value="true"/>
+    </service>
+</deployment>

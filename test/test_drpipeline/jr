@@ -1,6 +1,0 @@
-java -cp .:${CLASSPATH} MakeNDF abc \
-&& java -Xmx350M -cp .:${CLASSPATH} TestDRPipeline 1 abc abc0 \
-&& mv -f abc0.sdf abc00.sdf \
-&& java -Xmx350M -cp .:${CLASSPATH} TestDRPipeline 2 abc abc0 \
-&& java -cp .:${CLASSPATH} TestSpectrum abc0
-

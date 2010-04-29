@@ -1,5 +1,0 @@
-TestSOAPServer: use class SOAP2FTS to start a data reduction SOAP Server
-TestSOAPClient: use Axis to call the above SOAP server
-deploy.wsdd: A web service description XML file used by the Axis engine, TestSOAPServer.
-jc: compile the above two Java programs.
-jr: run the Java program, TestSOAPServer.

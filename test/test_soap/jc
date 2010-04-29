@@ -1,2 +1,0 @@
-echo "compiling TestSOAPServer... " && javac TestSOAPServer.java
-echo "compiling TestSOAPClient... " && javac TestSOAPClient.java
