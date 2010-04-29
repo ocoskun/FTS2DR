@@ -82,6 +82,9 @@ class SetParametersAction implements DramaTask.Action
          DataReductionParameters.pc_ssSize = arg.IntValue("ssSize");
          DataReductionParameters.pc_phaseFittingdegree = arg.IntValue("fittingDegree");
          DataReductionParameters.pc_weight_limit = arg.RealValue("weight_limit");
+         DataReductionParameters.pc_wn_lBound_percent = arg.RealValue("wn_lBound");
+         DataReductionParameters.pc_wn_uBound_percent = arg.RealValue("wn_uBound");
+         DataReductionParameters.pc_deglitch = arg.IntValue("deglitch");
          DataReductionParameters.pc_numThread = arg.IntValue("numThread");
 
          t.PutRequestEnd();
@@ -120,6 +123,9 @@ class DataReductionAction implements DramaTask.Action
                                        DataReductionParameters.pc_ssSize,
                                        DataReductionParameters.pc_phaseFittingdegree,
                                        DataReductionParameters.pc_weight_limit,
+                                       DataReductionParameters.pc_wn_lBound_percent,
+                                       DataReductionParameters.pc_wn_uBound_percent,
+                                       DataReductionParameters.pc_deglitch,
                                        DataReductionParameters.pc_numThread); 
         t.MsgOut("   Phase Correction : dsSize = "  + dp.pc_dsSize 
                                    + ", ssSize = "  + dp.pc_ssSize 
@@ -146,5 +152,8 @@ class DataReductionParameters
     public static int pc_ssSize = 300;
     public static int pc_phaseFittingdegree = 2;
     public static double pc_weight_limit = 0.01;
+    public static double pc_wn_lBound_percent = 0.0D;
+    public static double pc_wn_uBound_percent = 1.0D;
+    public static int pc_deglitch = 0;
     public static int pc_numThread = 1;
 }

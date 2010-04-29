@@ -56,6 +56,7 @@ public class DRPipelineDebug
       public double[] spectrum_debug = null;
       public double phaseFittingStdErr_debug = 0;
       public double newInterval_ifgm_debug = 0;
+      public double[] wn_Bounds = new double[2];
 
       CubicSplineInterpolation csi2fts = null;
       PhaseCorrection pc2fts = null;
@@ -64,7 +65,8 @@ public class DRPipelineDebug
 
       /* this subroutine is used for the purpose of debug */
       public DRPipelineDebug(String in, int pcfSize_h, int dsSize, int ssSize, 
-                        int fittingDegree, double weight_limit)
+                        int fittingDegree, double weight_limit, 
+                        double wn_lBound_percent, double wn_uBound_percent)
       {
             this.dsSize = dsSize;
             this.ssSize = ssSize;
@@ -72,6 +74,8 @@ public class DRPipelineDebug
             this.fittingDegree = fittingDegree;
             this.weight_limit = weight_limit;
             this.zpd_value = 0.0D;
+            this.wn_Bounds[0] = wn_lBound_percent;
+            this.wn_Bounds[1] = wn_uBound_percent;
 
             /* get the raw data from an interferogram file,
             */
@@ -92,7 +96,8 @@ public class DRPipelineDebug
             /* phase correction of interferograms */
             pc2fts = new PhaseCorrection(dsSize, ssSize, fittingDegree,
                                          pcfSize_h, weight_limit, index_ZPD,
-                                         interferogram_len);
+                                         interferogram_len, 
+                                         wn_lBound_percent, wn_uBound_percent);
             pc_dsSize = pc2fts.get_dsLength();
             pc_ssSize = pc2fts.get_ssLength();
             pc_pcfSize = pc2fts.get_pcfSize();
@@ -100,11 +105,11 @@ public class DRPipelineDebug
             int new_ssSize = pc2fts.get_ssLength();
             fft2fts = new RealDoubleFFT_Even(new_ssSize+1);
 
-//            int tail_starting = index_ZPD + pc_dsSize;
+//          int tail_starting = index_ZPD + pc_dsSize;
             deglitch2fts = new Deglitching(pc_dsSize, index_ZPD);
       }
       
-      public void dataReduction_Debug(int index_w, int index_l, boolean deglitch_flag)
+      public void dataReduction_Debug(int index_w, int index_l, int deglitch_flag)
       {
             /* interpolation of interferograms */
             double[] single_ifgm;
@@ -112,7 +117,7 @@ public class DRPipelineDebug
             ifgm_orig_debug = single_ifgm;
 
             double[] ifgm_interp = csi2fts.interpolate(single_ifgm);
-            if(deglitch_flag) deglitch2fts.deglitch(ifgm_interp);
+            deglitch2fts.deglitch(ifgm_interp, deglitch_flag);
             ifgm_interp_debug = ifgm_interp;
 
             double[] fittingStderr = new double[1];

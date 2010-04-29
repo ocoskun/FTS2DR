@@ -4,6 +4,8 @@ import ca.uol.aig.fts.io.NDFIO;
 import ca.uol.aig.fts.fitting.CubicSplineInterpolation;
 import ca.uol.aig.fts.phasecorrection.PhaseCorrection;
 import ca.uol.aig.fftpack.RealDoubleFFT_Even;
+import ca.uol.aig.fts.deglitch.Deglitching;
+
 /**
  * DRPipeline acts as a data reduction pipeline. It will intergrate 
  * Interferogram/Spectrum I/O, Interpolation, PhaseCorrection,
@@ -16,6 +18,8 @@ public class DRPipeline
 {
       int dsSize, ssSize, pcfSize_h, fittingDegree;
       double weight_limit, zpd_value;
+      double wn_lBound_percent, wn_uBound_percent;
+      int deglitching_flag;
       double[] mirrorPos;
       NDFIO ndf_ifgm;
       double[][][] ifgm_pc;
@@ -54,10 +58,19 @@ public class DRPipeline
        *        maxima is greater than weigth_limit, this point will be taken
        *        into account in phase fitting.
        * @param ZPD_value the value of zero-path distance.
+       * @param wn_lBound_percent the lower bound (%) of wavenumber range for phase-fitting.
+       * @param wn_uBound_percent the upper bound (%) of wavenumber range for phase-fitting.
+       * @param deglitching_flag the flag of deglitching. The possible values:
+       *        1: only deglitch the core part;
+       *        2: only deglitch the tail part;
+       *        3: deglitch both of the core part and the tail part.
+       *      other values: no deglitching.
        */
       public DRPipeline(String in, String out, int pcfSize_h, 
                         int dsSize, int ssSize, int fittingDegree, 
-                        double weight_limit, double ZPD_value)
+                        double weight_limit, double ZPD_value, 
+                        double wn_lBound_percent, double wn_uBound_percent,
+                        int deglitching_flag)
       {
             this.dsSize = dsSize;
             this.ssSize = ssSize;
@@ -65,6 +78,9 @@ public class DRPipeline
             this.fittingDegree = fittingDegree;
             this.weight_limit = weight_limit;
             this.zpd_value = ZPD_value;
+            this.wn_lBound_percent = wn_lBound_percent;
+            this.wn_uBound_percent = wn_uBound_percent;
+            this.deglitching_flag = deglitching_flag;
 
 //          test_dataReduction(in, out); 
             dataReduction(in, out);
@@ -80,12 +96,21 @@ public class DRPipeline
        * @param weight_limit when the amplitude of a point over the amplitude
        *        maxima is greater than weigth_limit, this point will be taken
        *        into account in phase fitting.
+       * @param wn_lBound_percent the lower bound (%) of wavenumber range for phase-fitting.
+       * @param wn_uBound_percent the upper bound (%) of wavenumber range for phase-fitting.
+       * @param deglitching_flag the flag of deglitching. The possible values:
+       *        1: only deglitch the core part;
+       *        2: only deglitch the tail part;
+       *        3: deglitch both of the core part and the tail part.
+       *      other values: no deglitching.
        * <br>
        * In this constructor,  ZPD_value = 0.
        */
       public DRPipeline(String in, String out, int pcfSize_h,
                         int dsSize, int ssSize, int fittingDegree,
-                        double weight_limit)
+                        double weight_limit, 
+                        double wn_lBound_percent, double wn_uBound_percent,
+                        int deglitching_flag)
       {
             this.dsSize = dsSize;
             this.ssSize = ssSize;
@@ -93,6 +118,9 @@ public class DRPipeline
             this.fittingDegree = fittingDegree;
             this.weight_limit = weight_limit;
             this.zpd_value = 0.0D;
+            this.wn_lBound_percent = wn_lBound_percent;
+            this.wn_uBound_percent = wn_uBound_percent;
+            this.deglitching_flag = deglitching_flag;
 
             dataReduction(in, out);
       }
@@ -109,11 +137,21 @@ public class DRPipeline
        *        maxima is greater than weigth_limit, this point will be taken
        *        into account in phase fitting.
        * @param ZPD_value the value of zero-path distance.
+       * @param wn_lBound_percent the lower bound (%) of wavenumber range for phase-fitting.
+       * @param wn_uBound_percent the upper bound (%) of wavenumber range for phase-fitting.
+       * @param deglitching_flag the flag of deglitching. The possible values:
+       *        1: only deglitch the core part;
+       *        2: only deglitch the tail part;
+       *        3: deglitch both of the core part and the tail part.
+       *      other values: no deglitching.
        * @param numThread the number of the computing threads.
        */
       public DRPipeline(String in, String out, int pcfSize_h,
                         int dsSize, int ssSize, int fittingDegree,
-                        double weight_limit, double ZPD_value, int numThread)
+                        double weight_limit, double ZPD_value, 
+                        double wn_lBound_percent, double wn_uBound_percent,
+                        int deglitching_flag,
+                        int numThread)
       {
             this.dsSize = dsSize;
             this.ssSize = ssSize;
@@ -121,6 +159,9 @@ public class DRPipeline
             this.fittingDegree = fittingDegree;
             this.weight_limit = weight_limit;
             this.zpd_value = ZPD_value;
+            this.wn_lBound_percent = wn_lBound_percent;
+            this.wn_uBound_percent = wn_uBound_percent;
+            this.deglitching_flag = deglitching_flag;
 
             dataReduction(in, out, numThread);
       }
@@ -135,6 +176,13 @@ public class DRPipeline
        * @param weight_limit when the amplitude of a point over the amplitude
        *        maxima is greater than weigth_limit, this point will be taken
        *        into account in phase fitting.
+       * @param wn_lBound_percent the lower bound (%) of wavenumber range for phase-fitting.
+       * @param wn_uBound_percent the upper bound (%) of wavenumber range for phase-fitting.
+       * @param deglitching_flag the flag of deglitching. The possible values:
+       *        1: only deglitch the core part;
+       *        2: only deglitch the tail part;
+       *        3: deglitch both of the core part and the tail part.
+       *      other values: no deglitching.
        * @param numThread the number of the computing threads.
        *
        * <br>
@@ -142,7 +190,10 @@ public class DRPipeline
        */
       public DRPipeline(String in, String out, int pcfSize_h,
                         int dsSize, int ssSize, int fittingDegree,
-                        double weight_limit, int numThread)
+                        double weight_limit, 
+                        double wn_lBound_percent, double wn_uBound_percent,
+                        int deglitching_flag,
+                        int numThread)
       {
             this.dsSize = dsSize;
             this.ssSize = ssSize;
@@ -150,6 +201,9 @@ public class DRPipeline
             this.fittingDegree = fittingDegree;
             this.weight_limit = weight_limit;
             this.zpd_value = 0.0D;
+            this.wn_lBound_percent = wn_lBound_percent;
+            this.wn_uBound_percent = wn_uBound_percent;
+            this.deglitching_flag = deglitching_flag;
 
             dataReduction(in, out, numThread);
       }
@@ -194,11 +248,22 @@ public class DRPipeline
 
             PhaseCorrection pc2fts = new PhaseCorrection(dsSize, ssSize, fittingDegree, 
                                                      pcfSize_h, weight_limit, index_ZPD, 
-                                                     interferogram_len); 
+                                                     interferogram_len, 
+                                                     wn_lBound_percent, wn_uBound_percent); 
 
             pc_dsSize = pc2fts.get_dsLength();
             pc_ssSize = pc2fts.get_ssLength();
             pc_pcfSize = pc2fts.get_pcfSize();
+
+            /* deglitching of interferograms */
+            Deglitching deglitch2fts = new Deglitching(pc_dsSize, index_ZPD);
+            for(int i=0; i<arrayWidth; i++)
+               for(int j=0; j<arrayLength; j++)
+               {
+                     deglitch2fts.deglitch(ifgm_interp[i][j], deglitching_flag);
+               }
+
+
 
             phaseFitting_stderr = new double[arrayWidth][arrayLength];
             ifgm_pc = new double[arrayWidth][arrayLength][];
@@ -283,10 +348,14 @@ public class DRPipeline
 
             PhaseCorrection pc2fts = new PhaseCorrection(dsSize, ssSize, fittingDegree,
                                                          pcfSize_h, weight_limit, index_ZPD,
-                                                         interferogram_len);
+                                                         interferogram_len, 
+                                                         wn_lBound_percent, wn_uBound_percent);
             pc_dsSize = pc2fts.get_dsLength();
             pc_ssSize = pc2fts.get_ssLength();
             pc_pcfSize = pc2fts.get_pcfSize();
+
+            /* deglitching of interferograms */
+            Deglitching deglitch2fts = new Deglitching(pc_dsSize, index_ZPD);
 
             int new_ssSize = pc2fts.get_ssLength();
             RealDoubleFFT_Even fft2fts = new RealDoubleFFT_Even(new_ssSize+1);
@@ -299,6 +368,7 @@ public class DRPipeline
                {
                      single_ifgm = ndf_ifgm.getInterferogram(i, j);
                      ifgm_interp = csi2fts.interpolate(single_ifgm);
+                     deglitch2fts.deglitch(ifgm_interp, deglitching_flag);
                      ifgm_pc[i][j] = pc2fts.getInterferogram(ifgm_interp, fittingStderr);
                      phaseFitting_stderr[i][j] = fittingStderr[0];
                      fft2fts.ft(ifgm_pc[i][j]);
@@ -347,10 +417,14 @@ public class DRPipeline
 
             PhaseCorrection pc2fts = new PhaseCorrection(dsSize, ssSize, fittingDegree,
                                                          pcfSize_h, weight_limit, index_ZPD,
-                                                         interferogram_len);
+                                                         interferogram_len,
+                                                         wn_lBound_percent, wn_uBound_percent);
             pc_dsSize = pc2fts.get_dsLength();
             pc_ssSize = pc2fts.get_ssLength();
             pc_pcfSize = pc2fts.get_pcfSize();
+
+            /* deglitching of interferograms */
+            Deglitching deglitch2fts = new Deglitching(pc_dsSize, index_ZPD);
 
             int new_ssSize = pc2fts.get_ssLength();
             RealDoubleFFT_Even fft2fts = new RealDoubleFFT_Even(new_ssSize+1);
@@ -371,7 +445,7 @@ public class DRPipeline
 
                 spectra_thread[i] = new Thread(new
                          CalcSpectrum_Thread(arrayWidth_start, arrayWidth_end - 1,
-                                      csi2fts, pc2fts, fft2fts));
+                                      csi2fts, deglitch2fts, pc2fts, fft2fts));
 
                 arrayWidth_start = arrayWidth_end;
             }
@@ -434,9 +508,9 @@ public class DRPipeline
            int arrayWidth_start, arrayWidth_end;
 
            CubicSplineInterpolation csi2fts_x;
+           Deglitching deglitch2fts_x;
            PhaseCorrection pc2fts_x;
            RealDoubleFFT_Even fft2fts_x;
-
            /** 
              * Constructor
              * @arrayWidth_start the ordinal width number of the first pixel
@@ -444,6 +518,7 @@ public class DRPipeline
            */
            public CalcSpectrum_Thread(int arrayWidth_start, int arrayWidth_end,
                                       CubicSplineInterpolation csi2fts, 
+                                      Deglitching deglitch2fts,
                                       PhaseCorrection pc2fts,
                                       RealDoubleFFT_Even fft2fts)
            {
@@ -451,6 +526,7 @@ public class DRPipeline
                  this.arrayWidth_end   = arrayWidth_end;
 
                  this.csi2fts_x = csi2fts;
+                 this.deglitch2fts_x = deglitch2fts;
                  this.pc2fts_x = pc2fts;
                  this.fft2fts_x = fft2fts;
            }
@@ -475,6 +551,8 @@ public class DRPipeline
                        single_ifgm = ndf_ifgm.getInterferogram(i, j);  
                        /* do interpolation */
                        ifgm_interp = csi2fts_x.interpolate(single_ifgm); 
+                       /* do deglitching */
+                       deglitch2fts_x.deglitch(ifgm_interp, deglitching_flag);
                        /* do phase-correction */
                        ifgm_pc[i][j] = pc2fts_x.getInterferogram(ifgm_interp, fittingStderr);
                        phaseFitting_stderr[i][j] = fittingStderr[0];

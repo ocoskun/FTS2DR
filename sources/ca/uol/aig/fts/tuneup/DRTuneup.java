@@ -81,6 +81,7 @@ public class DRTuneup
      int para_ssSize = 6000, curr_ssSize = para_ssSize;
      int para_fittingDegree = 2, curr_fittingDegree = para_fittingDegree;
      double para_weight_limit = 0.2, curr_weight_limit = para_weight_limit;
+     double para_wn_lBound_percent = 0D, para_wn_uBound_percent = 1.0D;
      int curr_pc_dsSize;
      int curr_pc_ssSize;
      int curr_pc_pcfSize;
@@ -91,7 +92,7 @@ public class DRTuneup
      boolean stopDR_flag = true;
 
      /* flags used to control data reduction */
-     boolean deglitch_flag = true;
+     int deglitch_flag = 3;
 
      /* range of the pixels */
      int array_widthStart = 0, array_widthEnd = 0;
@@ -201,6 +202,10 @@ public class DRTuneup
                      + ":[Weight limit(%):" + curr_weight_limit*100 + "]"
                      + ":[Fitting:" + curr_fittingDegree + "]";
 
+if(curr_phaseFittingStdErr_debug > 0.5)
+{
+    System.out.println(index_w + ":" + index_h);
+}
           noticeBoard.setText(info_str);
           current_WidthIndex = index_w;
           current_HeightIndex = index_h;
@@ -329,10 +334,17 @@ public class DRTuneup
          menuBar.add(menu);
 
          menu.addSeparator();
-         cbMenuItem = new JCheckBoxMenuItem("Deglitching", true);
-         cbMenuItem.setMnemonic(KeyEvent.VK_D);
+
+         cbMenuItem = new JCheckBoxMenuItem("Deglitching(Core)", true);
+         cbMenuItem.setMnemonic(KeyEvent.VK_C);
          cbMenuItem.addItemListener(cbEvent);
          menu.add(cbMenuItem);
+
+         cbMenuItem = new JCheckBoxMenuItem("Deglitching(Tail)", true);
+         cbMenuItem.setMnemonic(KeyEvent.VK_T);
+         cbMenuItem.addItemListener(cbEvent);
+         menu.add(cbMenuItem);
+
          menuBar.add(menu);
 
          menu = new JMenu("Tools");
@@ -468,7 +480,7 @@ public class DRTuneup
               else if(menuName.equals("Options..."))
               {
                    DRParametersDlg drParaDlg = new DRParametersDlg(drFrame);
-                   double[] para = new double[9];
+                   double[] para = new double[11];
 
                    para[0] = array_widthStart;
                    para[1] = array_widthEnd;
@@ -479,6 +491,8 @@ public class DRTuneup
                    para[6] = para_pcfSize_h;
                    para[7] = para_weight_limit;
                    para[8] = para_fittingDegree;
+                   para[9] = para_wn_lBound_percent;
+                   para[10] = para_wn_uBound_percent;
 
                    drParaDlg.setParameters(para);
                    drParaDlg.setVisible(true);
@@ -495,6 +509,8 @@ public class DRTuneup
                         para_pcfSize_h = (int)new_para[6];
                         para_weight_limit = new_para[7];
                         para_fittingDegree = (int)new_para[8];
+                        para_wn_lBound_percent = new_para[9];
+                        para_wn_uBound_percent = new_para[10];
                    }
               }
               else if(menuName.equals("Break Time"))
@@ -566,12 +582,19 @@ public class DRTuneup
                    }
                    displayPanel.revalidate();
               }
-              else if("Deglitching".equals(source.getText()))
+              else if("Deglitching(Core)".equals(source.getText()))
               {
                   if(e.getStateChange() == ItemEvent.SELECTED)
-                        deglitch_flag = true;
+                        deglitch_flag = deglitch_flag | 1;
                   else
-                        deglitch_flag = false;
+                        deglitch_flag = deglitch_flag & 2;
+              }
+              else if("Deglitching(Tail)".equals(source.getText()))
+              {
+                  if(e.getStateChange() == ItemEvent.SELECTED)
+                        deglitch_flag = deglitch_flag | 2;
+                  else
+                        deglitch_flag = deglitch_flag & 1;
               }
          }
     }
@@ -794,7 +817,8 @@ public class DRTuneup
          public void run()
          {
               drp = new DRPipelineDebug(rawNDFFile, para_pcfSize_h, para_dsSize, 
-                           para_ssSize, para_fittingDegree, para_weight_limit);
+                           para_ssSize, para_fittingDegree, para_weight_limit, 
+                           para_wn_lBound_percent, para_wn_uBound_percent);
 
               curr_pcfSize_h = para_pcfSize_h;
               curr_dsSize = para_dsSize;
@@ -832,8 +856,10 @@ class DRParametersDlg extends JDialog implements ActionListener
      JTextField tfd_pcfSize = null;
      JTextField tfd_weightLimit = null;
      JTextField tfd_fittingDegree = null;
+     JTextField tfd_wn_lBound = null;
+     JTextField tfd_wn_uBound = null;
 
-     double[] new_para = new double[9];
+     double[] new_para = new double[11];
 
      public DRParametersDlg(JFrame parentFrame)
      {
@@ -841,7 +867,7 @@ class DRParametersDlg extends JDialog implements ActionListener
        
           paraChanged = false;
           setTitle("Options");
-          setSize(500, 300);
+          setSize(500, 330);
 //        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
          
           getContentPane().add(createTopPane());
@@ -1031,6 +1057,38 @@ class DRParametersDlg extends JDialog implements ActionListener
           c.gridy = 8;
           paraPanel.add(tfd_fittingDegree, c);
 
+
+          comments = new JLabel("Wavenumber Range(lower bound)(%): ");
+          c.fill = GridBagConstraints.NONE;
+          c.weightx = 0.0;
+          c.gridx = 0;
+          c.gridy = 9;
+          c.gridwidth = 2;
+          paraPanel.add(comments, c);
+
+          tfd_wn_lBound = new JTextField(10);
+          c.fill = GridBagConstraints.HORIZONTAL;
+          c.weightx = 1.0;
+          c.gridx = 2;
+          c.gridy = 9;
+          paraPanel.add(tfd_wn_lBound, c);
+
+          comments = new JLabel("Wavenumber Range(upper bound)(%): ");
+          c.fill = GridBagConstraints.NONE;
+          c.weightx = 0.0;
+          c.gridx = 0;
+          c.gridy = 10;
+          c.gridwidth = 2;
+          paraPanel.add(comments, c);
+
+          tfd_wn_uBound = new JTextField(10);
+          c.fill = GridBagConstraints.HORIZONTAL;
+          c.weightx = 1.0;
+          c.gridx = 2;
+          c.gridy = 10;
+          paraPanel.add(tfd_wn_uBound, c);
+
+
           paraPanel.setBorder(BorderFactory.createCompoundBorder
                     (BorderFactory.createTitledBorder("Parameters of Data Reduction"),
                     BorderFactory.createEmptyBorder(5,5,5,5)));
@@ -1048,6 +1106,8 @@ class DRParametersDlg extends JDialog implements ActionListener
           tfd_pcfSize.setText(String.valueOf((int)para[6]));
           tfd_weightLimit.setText(String.valueOf(para[7]*100));
           tfd_fittingDegree.setText(String.valueOf((int)para[8]));
+          tfd_wn_lBound.setText(String.valueOf(para[9]*100));
+          tfd_wn_uBound.setText(String.valueOf(para[10]*100));
      }
 
      public double[] getParameters()
@@ -1095,6 +1155,11 @@ class DRParametersDlg extends JDialog implements ActionListener
                    new_para[7] /= 100.0;
                    error_Index = 4;
                    new_para[8] = Integer.parseInt(tfd_fittingDegree.getText());
+                   error_Index = 5;
+                   new_para[9] = Double.parseDouble(tfd_wn_lBound.getText());
+                   new_para[9] /= 100.0;
+                   new_para[10] = Double.parseDouble(tfd_wn_uBound.getText());
+                   new_para[10] /= 100.0;
               }
               catch(NumberFormatException e)
               {
@@ -1118,6 +1183,20 @@ class DRParametersDlg extends JDialog implements ActionListener
                       JOptionPane.showMessageDialog(this, 
                                         "Degree of phase fitting has a bad Value !!!",
                                         "Bad Value", JOptionPane.ERROR_MESSAGE);
+                   else if(error_Index == 5)
+                      JOptionPane.showMessageDialog(this,
+                                        "Wavenumber ranges has a bad Value !!!",
+                                        "Bad Value", JOptionPane.ERROR_MESSAGE);
+
+                   return;
+              }
+
+              if(new_para[9] > new_para[10] || new_para[9]<0 || new_para[9]>1.0
+                                            || new_para[10]<0 || new_para[10]>1.0)
+              {
+                   JOptionPane.showMessageDialog(this,
+                                    "Values of wavenumber range are invalid !!!",
+                                    "Bad Value", JOptionPane.ERROR_MESSAGE);
                    return;
               }
 

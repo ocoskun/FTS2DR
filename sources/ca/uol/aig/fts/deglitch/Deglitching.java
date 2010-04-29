@@ -30,12 +30,30 @@ public class Deglitching
      /**
       * deglitch an interferogram.
       * @param ifgm an interferogram.
+      * @param deglitching_flag the flag of deglitching. The possible values:
+      *        1: only deglitch the core part;
+      *        2: only deglitch the tail part;
+      *        3: deglitch both of the core part and the tail part.
+      *      other values: no deglitching.
       */
 
-     public void deglitch(double[] ifgm)
+     public void deglitch(double[] ifgm, int deglitching_flag)
      {
-           deglitch_CorePart(ifgm);
-           deglitch_TailPart(ifgm);
+           switch(deglitching_flag)
+           {
+               case 1:
+                  deglitch_CorePart(ifgm);
+                  break;
+               case 2:
+                  deglitch_TailPart(ifgm);
+                  break;
+               case 3:
+                  deglitch_CorePart(ifgm);
+                  deglitch_TailPart(ifgm);
+                  break;
+               default:
+                  break;
+           }
      }
      
      /* 

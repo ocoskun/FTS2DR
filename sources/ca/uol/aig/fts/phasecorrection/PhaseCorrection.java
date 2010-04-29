@@ -19,7 +19,10 @@ public class PhaseCorrection
      public double[] pcf_debug = null;
 
      private int dsLength, ssLength, phaseFittingdegree, pcfSize_h;
+     private int wavenumber_lBound, wavenumber_uBound;
      private int left_shifting;
+
+
      private double weight_limit_square;
      private RealDoubleFFT      pc_rfft   = null;
      private RealDoubleFFT_Even pc_rfft_e = null;
@@ -46,6 +49,9 @@ public class PhaseCorrection
           this.weight_limit_square = weight_limit * weight_limit;
 
           this.left_shifting = 0;
+
+          this.wavenumber_lBound = 0;
+          this.wavenumber_uBound = dsLength;
 
           pc_rfft   = new RealDoubleFFT(2*dsLength);
           pc_rfft_e = new RealDoubleFFT_Even(dsLength+1);
@@ -99,6 +105,9 @@ public class PhaseCorrection
           /* get the offset of the left shift */
           this.left_shifting = ZPD_index+1 - this.dsLength;
 
+          this.wavenumber_lBound = 0;
+          this.wavenumber_uBound = this.dsLength;
+
           pc_rfft   = new RealDoubleFFT(2*this.dsLength);
           pc_rfft_e = new RealDoubleFFT_Even(this.dsLength+1);
           pc_rfft_o = new RealDoubleFFT_Odd(this.dsLength-1);
@@ -108,6 +117,60 @@ public class PhaseCorrection
                                              ", pcfSize  = " + 2*this.pcfSize_h);
 */
      }
+
+     /**
+      * Constructor.
+      * @param dsLength the half size of the double-sided interferogram.
+      * @param ssLength the half size of the single-sided interferogram.
+      * @param pcfSize_h the half size of the phase-correction function.
+      * @param weight_limit used to remove insignificant points. The points whose
+      *      amplitude is less than (weight_limit x amplitude maxima) will be not
+      *      taken into account in the phase-fitting.
+      * @param ZPD_index the position index of the ZPD.
+      * @param interferogram_len the total length of an interferogram.
+      * @param wn_lBound_percent the lower bound (%) of the wavenumber range for phase-fitting.
+      * @param wn_uBound_percent the upper bound (%) of the wavenumber range for phase-fitting.
+      * <br>
+      * Note: This constructor will use the position of ZPD to determine new values for
+      * dsLength and ssLength.
+      */
+     public PhaseCorrection(int dsLength, int ssLength, int phaseFittingdegree, int pcfSize_h,
+                            double weight_limit, int ZPD_index, int interferogram_len,
+                            double wn_lBound_percent, double wn_uBound_percent)
+     {
+          this.dsLength = dsLength;
+          this.ssLength = ssLength;
+          this.phaseFittingdegree = phaseFittingdegree;
+          this.pcfSize_h = pcfSize_h;
+          this.weight_limit_square = weight_limit * weight_limit;
+
+          /* get a new value of dsLength which satifies 2^a 3^b 5^c 7^d and
+             is not greater than (ZPD_index+1)
+          */
+          if(ZPD_index+1 < this.dsLength)
+                this.dsLength = getNew_dsLength(ZPD_index+1);
+          else
+                this.dsLength = getNew_dsLength(this.dsLength);
+          /* get anew value of dsLength which staifies 2^a 3^b 5^c and
+             is not greater than (interferogram_len - ZPD_index - pcfSize_h).
+          */
+          int ssLength_init = interferogram_len - ZPD_index - pcfSize_h;
+          if(ssLength_init < this.ssLength)
+                this.ssLength = getNew_ssLength(ssLength_init);
+          else
+                this.ssLength = getNew_ssLength(this.ssLength);
+
+          /* get the offset of the left shift */
+          this.left_shifting = ZPD_index+1 - this.dsLength;
+
+          this.wavenumber_lBound = (int)(this.dsLength * wn_lBound_percent);
+          this.wavenumber_uBound = (int)(this.dsLength * wn_uBound_percent);
+
+          pc_rfft   = new RealDoubleFFT(2*this.dsLength);
+          pc_rfft_e = new RealDoubleFFT_Even(this.dsLength+1);
+          pc_rfft_o = new RealDoubleFFT_Odd(this.dsLength-1);
+     }
+
 
      /* get a new dsLength when the original dsLength is not a good number for FFT */
      private int getNew_dsLength(int dsLength)
@@ -210,13 +273,15 @@ public class PhaseCorrection
           pc_rfft.ft(m_dsInterferogram, cSpectrum);
 
           double[] weights = new double[cSpectrum.x.length];
-
+/*
           int num_ignore_low_frequences = cSpectrum.y.length/20;
-
           for(int i=0; i<num_ignore_low_frequences; i++) weights[i] = 0.0D;
+*/
+          for(int i=0; i<wavenumber_lBound; i++) weights[i] = 0.0D;
+          for(int i=wavenumber_uBound+1; i<cSpectrum.x.length; i++) weights[i] = 0.0D;
 
           double weight_max = 0;
-          for(int i=num_ignore_low_frequences; i<cSpectrum.y.length-1; i++)
+          for(int i=wavenumber_lBound; i<=wavenumber_uBound; i++)
           {
                weights[i] = cSpectrum.x[i] * cSpectrum.x[i] + cSpectrum.y[i] * cSpectrum.y[i];
                if(weights[i] > weight_max) weight_max = weights[i];
@@ -288,12 +353,12 @@ public class PhaseCorrection
           double[] new_phase;
 
           pnf.fit(wavenumber, phase, weights);
-/*********
+/*
           double[] fittingParam = pnf.getFittingParam();
           for(int i=0; i<fittingParam.length; i++)
               System.out.println(i + ":" + fittingParam[i]);
           System.exit(0);
-*********/
+*/
           double[] new_wavenumber = new double[dsLength+1];
           for(int i=0; i<dsLength+1; i++) new_wavenumber[i] = i;
 
@@ -366,6 +431,7 @@ public class PhaseCorrection
                   System.arraycopy(weights, bandIndex[i], band_Weights, 0, num_points);
 
 //                  System.out.println("band No. = " + i);
+
                   pnf.fit(band_Wavenumber, band_Phase, band_Weights);
 /*
                   for(int jj=0; jj<band_Wavenumber.length; jj++)

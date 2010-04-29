@@ -20,6 +20,9 @@ public class SOAP2FTS
      static int ssSize  = 300;
      static int phaseFittingdegree = 2;
      static double weight_limit = 0.01;
+     static double wn_lBound = 0D;
+     static double wn_uBound = 1.0D;
+     static int deglitching_flag = 0;
      static int numThread;
 
      AppHttpSOAPServer fts2soapServer = null;
@@ -33,13 +36,17 @@ public class SOAP2FTS
       *        will be taken into account in the phase-fitting.
       */
      public void setParameters(int pcfSize_h, int dsSize, int ssSize, int phaseFittingdegree, 
-                               double weight_limit, int numThread)
+                               double weight_limit, double wn_lBound, double wn_uBound, 
+                               int deglitching_flag, int numThread)
      {
           this.pcfSize_h = pcfSize_h;
           this.dsSize = dsSize;
           this.ssSize = ssSize;
           this.phaseFittingdegree = phaseFittingdegree;
           this.weight_limit = weight_limit;
+          this.wn_lBound = wn_lBound;
+          this.wn_uBound = wn_uBound;
+          this.deglitching_flag = deglitching_flag;
           this.numThread = numThread;
      }
      /**
@@ -51,7 +58,7 @@ public class SOAP2FTS
      {
           System.out.println(">>> Data Reduction: <IN=" + inPath + ">:<OUT=" + outPath +">");
           new DRPipeline(inPath, outPath, pcfSize_h, dsSize, ssSize, phaseFittingdegree, 
-                         weight_limit, numThread);
+                         weight_limit, wn_lBound, wn_uBound, deglitching_flag, numThread);
 
           System.out.println(">>> End of Data Reduction <<<");
      }
