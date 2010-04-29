@@ -72,13 +72,15 @@ public class Scuba2NDFIO extends ca.uol.aig.fts.io.DataIO
               HDSObject hdsData = hdsInterferogram.datFind("DATA_ARRAY").datFind("DATA");
               if(hdsData != null)
               {
+                  System.out.println("hdsData not null");
+                  
                   ifgm_cubeShape = hdsData.datShape();
                   arrayWidth = (int)ifgm_cubeShape[0];
                   arrayLength = (int)ifgm_cubeShape[1];
                   nPoints_Ifgm = (int)ifgm_cubeShape[2];
                   ifgm_cubeSize = hdsData.datSize();
                   ifgm_cubeType = hdsData.datType();
-
+System.out.println("ifgm cube type " + ifgm_cubeType);
                   if(ifgm_cubeType.equals("_UWORD")) ifgm_cube = hdsData.datGetvi();
                   else if(ifgm_cubeType.equals("_WORD")) ifgm_cube = hdsData.datGetvi();
                   else if(ifgm_cubeType.equals("_INTEGER")) ifgm_cube = hdsData.datGetvi();
@@ -306,8 +308,8 @@ public class Scuba2NDFIO extends ca.uol.aig.fts.io.DataIO
  */ 
 //              hdsSpectrum.datFind("More").datNew("FTS2DR_EXT", "EXT", new long[0]);
 //              hdsSpectrum.datFind("MORE").datFind("JCMTSTATE").datErase("FTS_POS");
-              hdsSpectrum.datFind("MORE").datFind("FTS2DR").datNew("FTS_WN", "_DOUBLE", new long[0]);
-              hdsSpectrum.datFind("MORE").datFind("FTS2DR").datFind("FTS_WN").datPut0d(wn_unit);
+              hdsSpectrum.datFind("MORE").datFind("FTS2DR").datNew("FTS_WN_FACTOR", "_DOUBLE", new long[0]);
+              hdsSpectrum.datFind("MORE").datFind("FTS2DR").datFind("FTS_WN_FACTOR").datPut0d(wn_unit);
          }
          catch(HDSException e)
          {
