@@ -1,5 +1,6 @@
 package ca.uol.aig.fts.tuneup;
 
+import ca.uol.aig.fts.common.DRCommonDebug;
 import ca.uol.aig.fts.drpipeline.DRPipelineDebug;
 import ca.uol.aig.fts.display.PlotXY;
 
@@ -43,6 +44,9 @@ import java.io.File;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintWriter;
 
 /**
  * Tune-up tool software for FTS-2
@@ -79,11 +83,8 @@ public class DRTuneup
      int para_fittingDegree = 2, curr_fittingDegree = para_fittingDegree;
      double para_weight_limit = 0.1, curr_weight_limit = para_weight_limit;
      double para_wn_lBound_percent = 0.05D, para_wn_uBound_percent = 0.95D;
-     double[] curr_wn_Bounds;
-     int curr_pc_dsSize;
-     int curr_pc_ssSize;
-     int curr_pc_pcfSize;
-     int curr_deglitch_flag;
+
+//     int curr_deglitch_flag;
 
      /* flags used to control the display */
      boolean showIfgm_flag = true;
@@ -107,20 +108,6 @@ public class DRTuneup
      /* temporary file prefix for Gnuplot */
      String tmp_prefix = ".tmp_fts2_aig";
 
-     /* the current result from data reduction */
-
-     public double[] curr_mirror_pos_orig_debug = null;
-     public double[] curr_ifgm_orig_debug = null;
-     public double[] curr_mirror_pos_interp_debug = null;
-     public double[] curr_ifgm_interp_debug = null;
-     public double[] curr_phase_orig_debug = null;
-     public double[] curr_phase_fitting_debug = null;
-     public double[] curr_intensity_square_orig_debug = null;
-     public double[] curr_pcf_debug = null;
-     public double[] curr_spectrum_debug = null;
-     public double curr_phaseFittingStdErr_debug = 0;
-     public double curr_newInterval_ifgm_debug = 0;
-
      /* the thread of data reduction */
      Thread drThread = null;
 
@@ -137,54 +124,37 @@ public class DRTuneup
           catch(InterruptedException e)
           {
           } 
+          
+//          curr_deglitch_flag = deglitch_flag;
 
-          curr_mirror_pos_orig_debug = drp.mirror_pos_orig_debug;
-          curr_ifgm_orig_debug = drp.ifgm_orig_debug;
-          curr_mirror_pos_interp_debug = drp.mirror_pos_interp_debug;
-          curr_ifgm_interp_debug = drp.ifgm_interp_debug;
-          curr_phase_orig_debug = drp.phase_orig_debug;
-          curr_phase_fitting_debug = drp.phase_fitting_debug;
-          curr_intensity_square_orig_debug = drp.intensity_square_orig_debug;
-          curr_pcf_debug = drp.pcf_debug;
-          curr_spectrum_debug = drp.spectrum_debug;
-          curr_phaseFittingStdErr_debug = drp.phaseFittingStdErr_debug;
-          curr_newInterval_ifgm_debug = drp.newInterval_ifgm_debug;
-
-          curr_pc_dsSize = drp.pc_dsSize;
-          curr_pc_ssSize = drp.pc_ssSize;
-          curr_pc_pcfSize = drp.pc_pcfSize;
-
-          curr_wn_Bounds = drp.wn_Bounds;
-          curr_deglitch_flag = deglitch_flag;
-
-          double[] freq = new double[curr_phase_fitting_debug.length];
+          double[] freq = new double[DRCommonDebug.phase_fitting.length];
           double[][] phase_left = new double[2][];
           double[][] intensity_right = new double[1][];
-          phase_left[0] = curr_phase_fitting_debug;
-          phase_left[1] = curr_phase_orig_debug; 
-          intensity_right[0] = new double[curr_intensity_square_orig_debug.length];
-          for(int i=0; i<curr_phase_fitting_debug.length; i++)
+          phase_left[0] = DRCommonDebug.phase_fitting;
+          phase_left[1] = DRCommonDebug.phase_orig;
+          intensity_right[0] = new double[DRCommonDebug.intensity_square.length];
+          for(int i=0; i<DRCommonDebug.phase_fitting.length; i++)
           {
                freq[i] = i;
-               intensity_right[0][i] = Math.sqrt(curr_intensity_square_orig_debug[i])
-                                       /(2*curr_pc_dsSize);
+               intensity_right[0][i] = Math.sqrt(DRCommonDebug.intensity_square[i])
+                                       /(2*DRCommonDebug.pc_dsSize);
           }
           phasePlot.plot(freq, phase_left, intensity_right);
-          double[] x = new double[curr_pcf_debug.length];
-          for(int i=0; i<curr_pcf_debug.length; i++)
+          double[] x = new double[DRCommonDebug.pcf.length];
+          for(int i=0; i<DRCommonDebug.pcf.length; i++)
           {
-              x[i] = -curr_pcf_debug.length/2 + 1 + i; 
+              x[i] = -DRCommonDebug.pcf.length/2 + 1 + i; 
           }
           double[][] pcf_left = new double[1][];
           double[][] pcf_right = null;
-          pcf_left[0] = curr_pcf_debug;
+          pcf_left[0] = DRCommonDebug.pcf;
           pcfPlot.plot(x, pcf_left, pcf_right);
 
-          double[] freq_whole = new double[curr_spectrum_debug.length]; 
-          for(int i=0; i<curr_spectrum_debug.length; i++) freq_whole[i] = i;
+          double[] freq_whole = new double[DRCommonDebug.spectrum.length]; 
+          for(int i=0; i<DRCommonDebug.spectrum.length; i++) freq_whole[i] = i;
           double[][] spectrum_left = new double[1][];
           double[][] spectrum_right = null;
-          spectrum_left[0] = curr_spectrum_debug;
+          spectrum_left[0] = DRCommonDebug.spectrum;
 
           for(int i=0; i<spectrum_left[0].length*0.01; i++) spectrum_left[0][i] = 0.0;
           for(int i=(int)(spectrum_left[0].length*0.99); i<spectrum_left[0].length; i++) 
@@ -196,25 +166,19 @@ public class DRTuneup
           {
               double[][] ifgm_left = new double[1][];
               double[][] ifgm_right = null;
-              ifgm_left[0] = curr_ifgm_orig_debug;
-              ifgmPlot.plot(curr_mirror_pos_orig_debug, ifgm_left, ifgm_right);
+              ifgm_left[0] = DRCommonDebug.ifgm;
+              ifgmPlot.plot(DRCommonDebug.mirror_pos, ifgm_left, ifgm_right);
           }
 
           String info_str;
           info_str = "Pixel: (" + index_w + ", " + index_h + ") ==>"
-                     + "[std error=" + String.format("%.2g", curr_phaseFittingStdErr_debug) + "]"
-                     + ":[PCF:" + curr_pc_pcfSize +"(" + 2*curr_pcfSize_h + ")]"
-                     + ":[DS:" + curr_pc_dsSize + "(" + curr_dsSize + ")]"
-                     + ":[SS:" + curr_pc_ssSize + "(" + curr_ssSize + ")]"
+                     + "[std error=" + String.format("%.2g", DRCommonDebug.phaseFittingStdErr) + "]"
+                     + ":[PCF:" + DRCommonDebug.pc_pcfSize +"(" + 2*curr_pcfSize_h + ")]"
+                     + ":[DS:" + DRCommonDebug.pc_dsSize + "(" + curr_dsSize + ")]"
+                     + ":[SS:" + DRCommonDebug.pc_ssSize + "(" + curr_ssSize + ")]"
                      + ":[Weight limit(%):" + curr_weight_limit*100 + "]"
                      + ":[Fitting:" + curr_fittingDegree + "]";
 
-/*
-if(curr_phaseFittingStdErr_debug > 0.5)
-{
-    System.out.println(index_w + ":" + index_h);
-}
-*/
           noticeBoard.setText(info_str);
           current_WidthIndex = index_w;
           current_HeightIndex = index_h;
@@ -685,7 +649,7 @@ if(curr_phaseFittingStdErr_debug > 0.5)
 
     void saveCurrentResult()
     {
-         if(curr_phase_fitting_debug == null) return;
+         if(DRCommonDebug.phase_fitting == null) return;
          if(pauseDR_flag == false && stopDR_flag == false) 
          {
               JOptionPane.showMessageDialog(drFrame,
@@ -723,48 +687,48 @@ if(curr_phaseFittingStdErr_debug > 0.5)
 
                     BufferedWriter bw = new BufferedWriter(
                                            new FileWriter(outFile_prefix+"_phase.dat"));
-                    for(int i=0; i<curr_phase_fitting_debug.length; i++)
+                    for(int i=0; i<DRCommonDebug.phase_fitting.length; i++)
                     {
-                         double intensity = Math.sqrt(curr_intensity_square_orig_debug[i])
-                                                            /(2*curr_pc_dsSize);
-                         str = (i + "  " + curr_phase_fitting_debug[i] + "  " + 
-                                       curr_phase_orig_debug[i] + " " + intensity + "\n");
+                         double intensity = Math.sqrt(DRCommonDebug.intensity_square[i])
+                                                            /(2*DRCommonDebug.pc_dsSize);
+                         str = (i + "  " + DRCommonDebug.phase_fitting[i] + "  " + 
+                                       DRCommonDebug.phase_orig[i] + " " + intensity + "\n");
                          bw.write(str, 0, str.length());
                     }
                     bw.close();
 
                     bw = new BufferedWriter(new FileWriter(outFile_prefix+"_ifgm_orig.dat"));
-                    for(int i=0; i<curr_mirror_pos_orig_debug.length; i++)
+                    for(int i=0; i<DRCommonDebug.mirror_pos.length; i++)
                     {
-                          str = (curr_mirror_pos_orig_debug[i] + "   " 
-                                         + curr_ifgm_orig_debug[i] + "\n");
+                          str = (DRCommonDebug.mirror_pos[i] + "   " 
+                                         + DRCommonDebug.ifgm[i] + "\n");
                           bw.write(str, 0, str.length());
                     } 
                     bw.close();
 
                     bw = new BufferedWriter(new FileWriter(outFile_prefix+"_ifgm_interp.dat"));
-                    for(int i=0; i<curr_mirror_pos_interp_debug.length; i++)
+                    for(int i=0; i<DRCommonDebug.mirror_pos_interp.length; i++)
                     {
-                          str = (curr_mirror_pos_interp_debug[i] + "   " 
-                                        + curr_ifgm_interp_debug[i] + "\n");
+                          str = (DRCommonDebug.mirror_pos_interp[i] + "   " 
+                                        + DRCommonDebug.ifgm_interp[i] + "\n");
                           bw.write(str, 0, str.length());
                     }
                     bw.close();
 
                     bw = new BufferedWriter(new FileWriter(outFile_prefix+"_pcf.dat"));
-                    for(int i=0; i<curr_pcf_debug.length; i++)
+                    for(int i=0; i<DRCommonDebug.pcf.length; i++)
                     {
-                          int x = -curr_pcf_debug.length/2 + 1 + i;
-                          str = (x + "   " + curr_pcf_debug[i] + "\n");
+                          int x = -DRCommonDebug.pcf.length/2 + 1 + i;
+                          str = (x + "   " + DRCommonDebug.pcf[i] + "\n");
                           bw.write(str, 0, str.length());
                     }
                     bw.close();
 
                     bw = new BufferedWriter(new FileWriter(outFile_prefix+"_spectrum.dat"));
-                    double unit_spectrum = Math.PI/(curr_pc_ssSize*curr_newInterval_ifgm_debug);
-                    for(int i=0; i<curr_spectrum_debug.length; i++)
+                    double unit_spectrum = Math.PI/(DRCommonDebug.pc_ssSize*DRCommonDebug.newInterval_ifgm);
+                    for(int i=0; i<DRCommonDebug.spectrum.length; i++)
                     {
-                          str = (i + "   " + curr_spectrum_debug[i] 
+                          str = (i + "   " + DRCommonDebug.spectrum[i] 
                                           + "   " + (i*unit_spectrum) + "\n");
                           bw.write(str, 0, str.length());
                     }
@@ -773,14 +737,14 @@ if(curr_phaseFittingStdErr_debug > 0.5)
                     bw = new BufferedWriter(new FileWriter(outFile_prefix+"_info.dat"));
                     str = rawNDFFile + "\n";
                     bw.write(str, 0, str.length());
-                    str = ("Size of PCF: " + curr_pc_pcfSize 
+                    str = ("Size of PCF: " + DRCommonDebug.pc_pcfSize 
                                            + "(" + 2*curr_pcfSize_h + ")\n");
                     bw.write(str, 0, str.length());
                     str = ("Size of the double-sided interferogram: " 
-                                   + curr_pc_dsSize + "(" + curr_dsSize + ")\n");
+                                   + DRCommonDebug.pc_dsSize + "(" + curr_dsSize + ")\n");
                     bw.write(str, 0, str.length());
                     str = ("Size of the singled-sided interferogram: " 
-                                      + curr_pc_ssSize + "(" + curr_ssSize + ")\n");
+                                      + DRCommonDebug.pc_ssSize + "(" + curr_ssSize + ")\n");
                     bw.write(str, 0, str.length());
                     str = ("Degree of phase-fitting: " + curr_fittingDegree + "\n");
                     bw.write(str, 0, str.length());
@@ -790,16 +754,16 @@ if(curr_phaseFittingStdErr_debug > 0.5)
                                          + current_HeightIndex + ")\n");
                     bw.write(str, 0, str.length());
                     str = ("Std error of phase fitting: " 
-                                + curr_phaseFittingStdErr_debug + "\n");
+                                + DRCommonDebug.phaseFittingStdErr + "\n");
                     bw.write(str, 0, str.length());
                     str = ("Unit of x-axis of the interferogram: " 
-                                  + curr_newInterval_ifgm_debug + "\n");
+                                  + DRCommonDebug.newInterval_ifgm + "\n");
                     bw.write(str, 0, str.length());
                     str = ("Unit of x-axis of the spectrum: " + 
-                              Math.PI/(curr_pc_ssSize*curr_newInterval_ifgm_debug) + "\n");
+                              Math.PI/(DRCommonDebug.pc_ssSize*DRCommonDebug.newInterval_ifgm) + "\n");
                     bw.write(str, 0, str.length());
 
-                    switch(curr_deglitch_flag)
+                    switch(deglitch_flag)
                     {
                          case 1:
                             str = "Deglitching: (Core)\n";
@@ -816,8 +780,8 @@ if(curr_phaseFittingStdErr_debug > 0.5)
                     }
                     bw.write(str, 0, str.length());
 
-                    str = "The range of wavenumber used in phase-fitting: (" + curr_wn_Bounds[0] +", "
-                          + curr_wn_Bounds[1] + ")";
+                    str = "The range of wavenumber used in phase-fitting: (" + DRCommonDebug.wn_Bounds[0] +", "
+                          + DRCommonDebug.wn_Bounds[1] + ")";
                     bw.write(str, 0, str.length());
 
                     bw.close();
@@ -828,9 +792,10 @@ if(curr_phaseFittingStdErr_debug > 0.5)
               }
          }
     }
+    
     void showInGnuplot()
     {
-         if(curr_phase_fitting_debug == null) return;
+         if(DRCommonDebug.phase_fitting == null) return;
          if(pauseDR_flag == false && stopDR_flag == false)
          {
               JOptionPane.showMessageDialog(drFrame,
@@ -840,27 +805,44 @@ if(curr_phaseFittingStdErr_debug > 0.5)
               return;
          }
 
+         saveResultToFile(tmp_prefix);
+         (new File(tmp_prefix + "_info.dat")).deleteOnExit();
+         (new File(tmp_prefix + "_ifgm_orig.dat")).deleteOnExit();
+         (new File(tmp_prefix + "_ifgm_interp.dat")).deleteOnExit();
+         (new File(tmp_prefix + "_phase.dat")).deleteOnExit();
+         (new File(tmp_prefix + "_pcf.dat")).deleteOnExit();
+         (new File(tmp_prefix + "_spectrum.dat")).deleteOnExit();
+              
+         gnuplotShow1D("phase");
+         gnuplotShow1D("ifgm");
+         gnuplotShow1D("pcf");
+         gnuplotShow1D("spectrum");
+    }
+    
+    void gnuplotShow1D(String element)
+    {
+         InputStream ins = DRTuneup.class.getResourceAsStream("/res/fts2_" + element + ".gnu");
+
          try
          {
-              saveResultToFile(tmp_prefix);
-              (new File(tmp_prefix + "_info.dat")).deleteOnExit();
-              (new File(tmp_prefix + "_ifgm_orig.dat")).deleteOnExit();
-              (new File(tmp_prefix + "_ifgm_interp.dat")).deleteOnExit();
-              (new File(tmp_prefix + "_phase.dat")).deleteOnExit();
-              (new File(tmp_prefix + "_pcf.dat")).deleteOnExit();
-              (new File(tmp_prefix + "_spectrum.dat")).deleteOnExit();
-              Runtime.getRuntime().exec("gnuplot -persist " 
-                        + DRTuneup.class.getResource("/res/fts2_phase.gnu").getFile());
-              Runtime.getRuntime().exec("gnuplot -persist "
-                        + DRTuneup.class.getResource("/res/fts2_ifgm.gnu").getFile());
-              Runtime.getRuntime().exec("gnuplot -persist "
-                        + DRTuneup.class.getResource("/res/fts2_pcf.gnu").getFile());
-              Runtime.getRuntime().exec("gnuplot -persist "
-                        + DRTuneup.class.getResource("/res/fts2_spectrum.gnu").getFile());
+            int nBytes = ins.available();
+            byte[] gnuplot_cmd_byte = new byte[nBytes];
+            int count = 0;
+            int len = 0;
+            while((len = ins.read(gnuplot_cmd_byte, count, nBytes-count)) != -1)
+            {
+                count += len;
+            }
+
+            PrintWriter gp = new PrintWriter(Runtime.getRuntime().exec("gnuplot -persist ").getOutputStream());
+            String gnuplot_cmd_str = new String(gnuplot_cmd_byte, "US-ASCII");
+                  
+            gp.print(gnuplot_cmd_str);
+            gp.println();
+            gp.close();
          }
-         catch(IOException e)
+         catch(Exception e)
          {
-              e.printStackTrace();
          }
     }
 

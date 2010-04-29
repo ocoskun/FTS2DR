@@ -302,6 +302,148 @@ public class Scuba2NDFIO extends ca.uol.aig.fts.io.DataIO
      }
 
      /**
+      * save the spectrum cube to the spectrum file.
+      * @param fittingParam the fitting parameters for the interferogram cube.
+      */
+     public void saveFittingParam(Object fittingParam)
+     {
+         try
+         {
+              if(fittingParam instanceof float[][][])
+              {
+                   float[][][] params = (float[][][])fittingParam;
+
+                   long[] dims = new long[3];
+                   dims[0] = params.length;
+                   dims[1] = params[0].length;
+                   dims[2] = params[0][0].length;
+
+                   nPoints_Ifgm = (int)dims[2];
+
+                   int cubeSize = (int)(dims[0] * dims[1] * dims[2]);
+
+                   float[] params_fitting = new float[cubeSize];
+                   int index = 0;
+                   /* convert the spectrum cube from 3-d data format to 1-d data format */
+                   for(int k=0; k<dims[2]; k++)
+                     for(int j=0; j<dims[1]; j++)
+                       for(int i=0; i<dims[0]; i++)
+                       {
+                           params_fitting[index] = params[i][j][k];
+                           index++;
+                       }
+
+                   hdsSpectrum.datFind("MORE").datFind("FRAMEDATA").datNew("FTS_FPM", "_REAL", dims);
+                   hdsSpectrum.datFind("MORE").datFind("FRAMEDATA").datFind("FTS_FPM").datPutvr(params_fitting);
+              }
+              else if(fittingParam instanceof double[][][])
+              {
+                   double[][][] params = (double[][][])fittingParam;
+
+                   long[] dims = new long[3];
+                   dims[0] = params.length;
+                   dims[1] = params[0].length;
+                   dims[2] = params[0][0].length;
+
+                   nPoints_Ifgm = (int)dims[2];
+
+                   int cubeSize = (int)(dims[0] * dims[1] * dims[2]);
+
+                   float[] params_fitting = new float[cubeSize];
+                   int index = 0;
+                   /* convert the spectrum cube from 3-d data format to 1-d data format */
+                   for(int k=0; k<dims[2]; k++)
+                     for(int j=0; j<dims[1]; j++)
+                       for(int i=0; i<dims[0]; i++)
+                       {
+                           params_fitting[index] = (float)params[i][j][k];
+                           index++;
+                       }
+                   
+                   hdsSpectrum.datFind("MORE").datFind("FRAMEDATA").datNew("FTS_FPM", "_REAL", dims);
+                   hdsSpectrum.datFind("MORE").datFind("FRAMEDATA").datFind("FTS_FPM").datPutvr(params_fitting);
+              }
+              else
+              {
+                   System.out.println("The data type is not supported! And the data is not saved!!!");
+              }
+
+
+         }
+         catch(HDSException e)
+         {
+              System.out.println(e);
+         }
+     }
+
+     /**
+      * save the spectrum cube to the spectrum file.
+      * @param fittingSTDError the standard fitting error for the interferogram cube.
+      */
+     public void saveFittingSTDError(Object fittingSTDError)
+     {
+         try
+         {
+            //  int nPoints_Ifgm = 0;
+              if(fittingSTDError instanceof float[][])
+              {
+                   float[][] stdError = (float[][])fittingSTDError;
+
+                   long[] dims = new long[2];
+                   dims[0] = stdError.length;
+                   dims[1] = stdError[0].length;
+
+                   int matrixSize = (int)(dims[0] * dims[1]);
+
+                   float[] stdError_fitting = new float[matrixSize];
+                   int index = 0;
+                   /* convert the spectrum cube from 3-d data format to 1-d data format */
+                   for(int j=0; j<dims[1]; j++)
+                      for(int i=0; i<dims[0]; i++)
+                      {
+                          stdError_fitting[index] = stdError[i][j];
+                          index++;
+                      }
+                   hdsSpectrum.datFind("MORE").datFind("FRAMEDATA").datNew("FTS_STD", "_REAL", dims);
+                   hdsSpectrum.datFind("MORE").datFind("FRAMEDATA").datFind("FTS_STD").datPutvr(stdError_fitting);
+              }
+              else if(fittingSTDError instanceof double[][])
+              {
+                   double[][] stdError = (double[][])fittingSTDError;
+
+                   long[] dims = new long[2];
+                   dims[0] = stdError.length;
+                   dims[1] = stdError[0].length;
+
+                   int matrixSize = (int)(dims[0] * dims[1]);
+
+                   float[] stdError_fitting = new float[matrixSize];
+                   int index = 0;
+                   /* convert the spectrum cube from 3-d data format to 1-d data format */
+                     for(int j=0; j<dims[1]; j++)
+                       for(int i=0; i<dims[0]; i++)
+                       {
+                           stdError_fitting[index] = (float)stdError[i][j];
+                           index++;
+                       }
+                   hdsSpectrum.datFind("MORE").datFind("FRAMEDATA").datNew("FTS_STD", "_REAL", dims);
+                   hdsSpectrum.datFind("MORE").datFind("FRAMEDATA").datFind("FTS_STD").datPutvr(stdError_fitting);
+
+              }
+              else
+              {
+                   System.out.println("The data type is not supported! And the data is not saved!!!");
+              }
+
+         }
+         catch(HDSException e)
+         {
+              System.out.println(e);
+         }
+     }
+     
+     
+     /**
       * close the handle of the spectrum file.
       */
      public void closeSpectrum()

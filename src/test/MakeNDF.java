@@ -134,7 +134,7 @@ public class MakeNDF
          }
      }
 
-     void createNDF(float[][][] ifgm_cube, float[] pos)
+     public void createNDF(float[][][] ifgm_cube, float[] pos)
      {
            saveMirrorPos(pos);
 

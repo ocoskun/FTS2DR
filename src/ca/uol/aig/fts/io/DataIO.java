@@ -50,6 +50,18 @@ public abstract class DataIO
      public abstract void saveSpectrum(Object spectrumCube, double wavenumber_unit);
 
      /**
+      * save the spectrum cube to the spectrum file.
+      * @param fittingParam the fitting parameters for the interferogram cube.
+      */
+     public void saveFittingParam(Object fittingParam) {};
+     
+     /**
+      * save the spectrum cube to the spectrum file.
+      * @param fittingSTDError the standard fitting error for the interferogram cube.
+      */
+     public void saveFittingSTDError(Object fittingSTDError) {};
+     
+     /**
       * close the spectrum file and/or the interferogram file.
       */
      public abstract void closeSpectrum();

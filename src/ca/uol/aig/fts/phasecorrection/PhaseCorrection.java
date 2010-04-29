@@ -4,6 +4,7 @@ import ca.uol.aig.fftpack.Complex1D;
 import ca.uol.aig.fftpack.RealDoubleFFT;
 import ca.uol.aig.fftpack.RealDoubleFFT_Even;
 import ca.uol.aig.fftpack.RealDoubleFFT_Odd;
+import ca.uol.aig.fts.common.DRCommonDebug;
 import ca.uol.aig.fts.fitting.PolynomialFitting;
 
 /**
@@ -13,10 +14,10 @@ import ca.uol.aig.fts.fitting.PolynomialFitting;
  */
 public class PhaseCorrection
 {
-     public double[] phase_orig_debug = null;
-     public double[] phase_fitting_debug = null;
-     public double[] intensity_square_orig_debug = null;
-     public double[] pcf_debug = null;
+//     public double[] phase_orig_debug = null;
+//     public double[] phase_fitting_debug = null;
+//     public double[] intensity_square_orig_debug = null;
+//     public double[] pcf_debug = null;
 
      private int dsLength, ssLength, phaseFittingdegree, pcfSize_h;
      private int wavenumber_lBound, wavenumber_uBound;
@@ -27,8 +28,7 @@ public class PhaseCorrection
      private RealDoubleFFT      pc_rfft   = null;
      private RealDoubleFFT_Even pc_rfft_e = null;
      private RealDoubleFFT_Odd  pc_rfft_o = null;
-     
-//   public int dsLength_debug, ssLength_debug, pcfSize_h_debug;
+
      /**
       * Constructor.
       * @param dsLength the half size of the double-sided interferogram.
@@ -56,11 +56,6 @@ public class PhaseCorrection
           pc_rfft   = new RealDoubleFFT(2*dsLength);
           pc_rfft_e = new RealDoubleFFT_Even(dsLength+1);
           pc_rfft_o = new RealDoubleFFT_Odd(dsLength-1);
-/*
-          System.out.println("Phase Correction: dsLength = " + this.dsLength +
-                                             ", ssLength = " + this.ssLength +
-                                              ", pcfSize = " + 2*this.pcfSize_h);
-*/
      }
 
      /**
@@ -111,11 +106,6 @@ public class PhaseCorrection
           pc_rfft   = new RealDoubleFFT(2*this.dsLength);
           pc_rfft_e = new RealDoubleFFT_Even(this.dsLength+1);
           pc_rfft_o = new RealDoubleFFT_Odd(this.dsLength-1);
-/*
-          System.out.println("Phase Correction: dsLength = " + this.dsLength +
-                                             ", ssLength = " + this.ssLength +
-                                             ", pcfSize  = " + 2*this.pcfSize_h);
-*/
      }
 
      /**
@@ -251,7 +241,7 @@ public class PhaseCorrection
      }
 
      /* get the phases from double-side interferograms */
-     double[] getPhase(double[] dsInterferogram, double[] stderr)
+     double[] getPhase(double[] dsInterferogram, double[] stderr, double[] fittingParam)
      {
 
           double[] m_dsInterferogram = new double[2*dsLength];
@@ -273,10 +263,7 @@ public class PhaseCorrection
           pc_rfft.ft(m_dsInterferogram, cSpectrum);
 
           double[] weights = new double[cSpectrum.x.length];
-/*
-          int num_ignore_low_frequences = cSpectrum.y.length/20;
-          for(int i=0; i<num_ignore_low_frequences; i++) weights[i] = 0.0D;
-*/
+          
           for(int i=0; i<wavenumber_lBound; i++) weights[i] = 0.0D;
           for(int i=wavenumber_uBound+1; i<cSpectrum.x.length; i++) weights[i] = 0.0D;
 
@@ -310,8 +297,8 @@ public class PhaseCorrection
 
           phaseSmoothing(phase);
 
-          phase_orig_debug = phase;
-          intensity_square_orig_debug = weights;
+          DRCommonDebug.phase_orig = phase;
+          DRCommonDebug.intensity_square = weights;
 
           double weights_abs_min = weight_max * weight_limit_square;
 
@@ -331,13 +318,14 @@ public class PhaseCorrection
           }
           phase_weights[3*cSpectrum.x.length] = coord_index;
 
-          return piecewisePhaseFitting(phase_weights, stderr);
+          return piecewisePhaseFitting(phase_weights, stderr, fittingParam);
  
 //        return phaseFitting(phase_weights);
      }
 
      /* get the new phases from weighted fitting */
-     double[] phaseFitting(double[] phase_weights)
+/*     
+     private double[] phaseFitting(double[] phase_weights)
      {
           int NPoints = (int)phase_weights[phase_weights.length-1];
           double[] wavenumber = new double[NPoints];
@@ -354,12 +342,7 @@ public class PhaseCorrection
           double[] new_phase;
 
           pnf.fit(wavenumber, phase, weights);
-/*
-          double[] fittingParam = pnf.getFittingParam();
-          for(int i=0; i<fittingParam.length; i++)
-              System.out.println(i + ":" + fittingParam[i]);
-          System.exit(0);
-*/
+          
           double[] new_wavenumber = new double[dsLength+1];
           for(int i=0; i<dsLength+1; i++) new_wavenumber[i] = i;
 
@@ -369,8 +352,9 @@ public class PhaseCorrection
 
           return new_phase;
      }
+ */
      /* get the new phases from weighted fitting */
-     double[] piecewisePhaseFitting(double[] phase_weights, double[] stderr)
+     private double[] piecewisePhaseFitting(double[] phase_weights, double[] stderr, double[] fittingParam)
      {
           int NPoints = (int)phase_weights[phase_weights.length-1];
           double[] wavenumber = new double[NPoints];
@@ -415,8 +399,6 @@ public class PhaseCorrection
                   middle_points[i] = (wavenumber[index]+wavenumber[index-1])/2;
               }
               middle_points[bandNumber] = wavenumber[NPoints-1];
-         
-//              System.out.println("num of bands = " + bandNumber);
 
               double[][] middle_phase = new double[bandNumber][2];
               for(int i=0; i<bandNumber; i++)
@@ -431,18 +413,15 @@ public class PhaseCorrection
                   double[] band_Weights = new double[num_points];
                   System.arraycopy(weights, bandIndex[i], band_Weights, 0, num_points);
 
-//                  System.out.println("band No. = " + i);
 
                   pnf.fit(band_Wavenumber, band_Phase, band_Weights);
-/*
-                  for(int jj=0; jj<band_Wavenumber.length; jj++)
-                  {
-                        System.out.println(band_Wavenumber[jj] + ":" +
-                                          band_Phase[jj] + ":" + band_Weights[jj]);
-                  }
-*/
 
-                  double[] fittingParam = pnf.getFittingParam();
+                  double[] t_fittingParam = pnf.getFittingParam();
+                  for(int k=0; k<t_fittingParam.length; k++)
+                  {
+                      fittingParam[k] = t_fittingParam[k];
+                  }
+
                   constantPhase[i] = fittingParam[0];
 
                   middle_phase[i][0] = pnf.getResult(middle_points[i]);
@@ -472,19 +451,14 @@ public class PhaseCorrection
               }
           }
 
-//        double[] new_phase;
-
           pnf.fit(wavenumber, phase, weights);
 
-//        System.out.println("std error = " + pnf.getSTDDev());
           stderr[0] = pnf.getSTDDev();
 
           double[] new_wavenumber = new double[dsLength+1];
           for(int i=0; i<dsLength+1; i++) new_wavenumber[i] = i;
 
           double[] new_phase = pnf.getResult(new_wavenumber);
-
-          phase_fitting_debug = new_phase;
 
           return new_phase;
      }
@@ -540,7 +514,7 @@ public class PhaseCorrection
               pcf[2*pcfSize_h-1] = cos_phase[pcfSize_h] + sin_phase[pcfSize_h-1];
           }
 
-          pcf_debug = pcf;
+//          pcf_debug = pcf;
 
           return pcf;
      }
@@ -579,20 +553,38 @@ public class PhaseCorrection
      }
 
      /* get a new pcfSize_h */
+/*     
      private int getNew_pcfSize_h(int interferogram_len)
      {
           int num = interferogram_len - (ssLength + dsLength + left_shifting - 1);
           if(pcfSize_h > num) return num;
           else return pcfSize_h;
      }
+*/     
+      /* test if the interferogram is too flat */
+      private boolean isFlat(double[] x)
+      {
+            double sumValue = 0;
+            double meanValue = 0;
+            double squareSum = 0;
+
+            for(int i=0; i<x.length; i++) sumValue += x[i];
+            meanValue = sumValue/x.length;
+
+            for(int i=0; i<x.length; i++) squareSum += (x[i]-meanValue)*(x[i]-meanValue);
+            return (Math.sqrt(squareSum/x.length) < 1.0e-10);
+      }
+     
      /**
       * get the phase-corrected one-side interferogram.
       * @param compositeInterferogram the composite interferogram, including a short double-side
       *                   and a long one-side
+      * @param phaseFitting_stderr (out) the standard error of phase-fitting
+      * @param fittingParam the polynomial fitting parameters of phase-fitting
       * @return the phose-corrected one-side interferogram. The length of the phase-corrected 
       * interferogram is equal to (ssLength + 1). 
       */
-     public double[] getInterferogram(double[] compositeInterferogram, double[] phaseFitting_stderr)
+     public double[] getInterferogram(double[] compositeInterferogram, double[] phaseFitting_stderr, double[] fittingParam)
      {
           double[] dsInterferogram = new double[2*dsLength];
           System.arraycopy(compositeInterferogram, left_shifting, dsInterferogram, 0, 2*dsLength);
@@ -601,13 +593,32 @@ public class PhaseCorrection
           System.arraycopy(compositeInterferogram, left_shifting, 
                            new_compositeInterferogram, 0, new_compositeInterferogram.length);
 
-          double[] stderr = new double[1];
-          double[] phase = getPhase(dsInterferogram, phaseFitting_stderr);
+          double[] phase = null;
 
-//          System.out.println("<<< std error >>> = " + phaseFitting_stderr[0]);
+          if(!isFlat(dsInterferogram))
+          { 
+              phase = getPhase(dsInterferogram, phaseFitting_stderr, fittingParam);
+          }
+          else
+          {
+              phaseFitting_stderr[0] = 1.0;
+              for(int i=0; i<fittingParam.length; i++)fittingParam[i]=0.0;
+              
+              phase = new double[dsLength+1];
+              DRCommonDebug.intensity_square = new double[dsLength+1];
+              for(int i=0; i<dsLength+1; i++) 
+              {
+                  phase[i] = 0.0;
+                  DRCommonDebug.intensity_square[i] = 0.0;
+              }
+              DRCommonDebug.phase_orig = phase;
+          }
+          
+          DRCommonDebug.phase_fitting = phase;
 
           double[] pcf = calcPCF(phase);
-
+          DRCommonDebug.pcf = pcf;
+          
           return conv(new_compositeInterferogram, pcf);
      }
 }
