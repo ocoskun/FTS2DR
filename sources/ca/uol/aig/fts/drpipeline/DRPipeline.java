@@ -78,6 +78,15 @@ public class DRPipeline
             this.fittingDegree = fittingDegree;
             this.weight_limit = weight_limit;
             this.zpd_value = ZPD_value;
+            if(wn_lBound_percent < 0) wn_lBound_percent = 0;
+            if(wn_lBound_percent > 1) wn_lBound_percent = 1;
+            if(wn_uBound_percent < 0) wn_uBound_percent = 0;
+            if(wn_uBound_percent > 1) wn_uBound_percent = 1;
+            if(wn_lBound_percent >= wn_uBound_percent)
+            {
+                  wn_lBound_percent = 0;
+                  wn_uBound_percent = 1;
+            }
             this.wn_lBound_percent = wn_lBound_percent;
             this.wn_uBound_percent = wn_uBound_percent;
             this.deglitching_flag = deglitching_flag;
@@ -118,8 +127,20 @@ public class DRPipeline
             this.fittingDegree = fittingDegree;
             this.weight_limit = weight_limit;
             this.zpd_value = 0.0D;
+
+            if(wn_lBound_percent < 0) wn_lBound_percent = 0;
+            if(wn_lBound_percent > 1) wn_lBound_percent = 1;
+            if(wn_uBound_percent < 0) wn_uBound_percent = 0;
+            if(wn_uBound_percent > 1) wn_uBound_percent = 1;
+            if(wn_lBound_percent >= wn_uBound_percent)
+            {
+                  wn_lBound_percent = 0;
+                  wn_uBound_percent = 1;
+            }
+
             this.wn_lBound_percent = wn_lBound_percent;
             this.wn_uBound_percent = wn_uBound_percent;
+
             this.deglitching_flag = deglitching_flag;
 
             dataReduction(in, out);
@@ -159,6 +180,17 @@ public class DRPipeline
             this.fittingDegree = fittingDegree;
             this.weight_limit = weight_limit;
             this.zpd_value = ZPD_value;
+
+            if(wn_lBound_percent < 0) wn_lBound_percent = 0;
+            if(wn_lBound_percent > 1) wn_lBound_percent = 1;
+            if(wn_uBound_percent < 0) wn_uBound_percent = 0;
+            if(wn_uBound_percent > 1) wn_uBound_percent = 1;
+            if(wn_lBound_percent >= wn_uBound_percent)
+            {
+                  wn_lBound_percent = 0;
+                  wn_uBound_percent = 1;
+            }
+
             this.wn_lBound_percent = wn_lBound_percent;
             this.wn_uBound_percent = wn_uBound_percent;
             this.deglitching_flag = deglitching_flag;
@@ -201,6 +233,17 @@ public class DRPipeline
             this.fittingDegree = fittingDegree;
             this.weight_limit = weight_limit;
             this.zpd_value = 0.0D;
+
+            if(wn_lBound_percent < 0) wn_lBound_percent = 0;
+            if(wn_lBound_percent > 1) wn_lBound_percent = 1;
+            if(wn_uBound_percent < 0) wn_uBound_percent = 0;
+            if(wn_uBound_percent > 1) wn_uBound_percent = 1;
+            if(wn_lBound_percent >= wn_uBound_percent)
+            {
+                  wn_lBound_percent = 0;
+                  wn_uBound_percent = 1;
+            }
+
             this.wn_lBound_percent = wn_lBound_percent;
             this.wn_uBound_percent = wn_uBound_percent;
             this.deglitching_flag = deglitching_flag;

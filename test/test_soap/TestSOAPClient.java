@@ -27,9 +27,13 @@ public class TestSOAPClient
                 int ssSize = 6000;
                 int fittingDegree = 2;
                 float weight_limit = 0.1F;
+                double wn_lBound = 0.05;
+                double wn_uBound = 1.0;
+                double deglitch_flag = 3;
                 int numThread = 1;
                 call.invoke(new Object[] {pcfSize_h, dsSize, ssSize, fittingDegree, 
-                                          weight_limit, numThread});  
+                                          weight_limit, wn_lBound, wn_uBound, 
+                                          deglitch_flag, numThread});  
 
                 /* call the operation: dataReduction */
                 call.setOperationName(new QName("http://www.uleth.ca/", "dataReduction"));

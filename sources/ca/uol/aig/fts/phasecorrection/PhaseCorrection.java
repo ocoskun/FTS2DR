@@ -286,6 +286,7 @@ public class PhaseCorrection
                weights[i] = cSpectrum.x[i] * cSpectrum.x[i] + cSpectrum.y[i] * cSpectrum.y[i];
                if(weights[i] > weight_max) weight_max = weights[i];
           }
+          weights[0] = 0.0;
           weights[cSpectrum.x.length-1] = 0.0;
 
           if(weight_max <=0) weight_max = 1;

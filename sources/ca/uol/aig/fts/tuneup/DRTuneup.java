@@ -80,11 +80,13 @@ public class DRTuneup
      int para_dsSize = 300, curr_dsSize = para_dsSize;
      int para_ssSize = 6000, curr_ssSize = para_ssSize;
      int para_fittingDegree = 2, curr_fittingDegree = para_fittingDegree;
-     double para_weight_limit = 0.2, curr_weight_limit = para_weight_limit;
+     double para_weight_limit = 0.1, curr_weight_limit = para_weight_limit;
      double para_wn_lBound_percent = 0D, para_wn_uBound_percent = 1.0D;
+     double[] curr_wn_Bounds;
      int curr_pc_dsSize;
      int curr_pc_ssSize;
      int curr_pc_pcfSize;
+     int curr_deglitch_flag;
 
      /* flags used to control the display */
      boolean showIfgm_flag = true;
@@ -154,6 +156,9 @@ public class DRTuneup
           curr_pc_dsSize = drp.pc_dsSize;
           curr_pc_ssSize = drp.pc_ssSize;
           curr_pc_pcfSize = drp.pc_pcfSize;
+
+          curr_wn_Bounds = drp.wn_Bounds;
+          curr_deglitch_flag = deglitch_flag;
 
           double[] freq = new double[curr_phase_fitting_debug.length];
           double[][] phase_left = new double[2][];
@@ -764,7 +769,28 @@ if(curr_phaseFittingStdErr_debug > 0.5)
                                   + curr_newInterval_ifgm_debug + "\n");
                     bw.write(str, 0, str.length());
                     str = ("Unit of x-axis of the spectrum: " + 
-                              Math.PI/(curr_pc_ssSize*curr_newInterval_ifgm_debug));
+                              Math.PI/(curr_pc_ssSize*curr_newInterval_ifgm_debug) + "\n");
+                    bw.write(str, 0, str.length());
+
+                    switch(curr_deglitch_flag)
+                    {
+                         case 1:
+                            str = "Deglitching: (Core)\n";
+                            break;
+                         case 2:
+                            str = "Deglitching: (Tail)\n";
+                            break;
+                         case 3:
+                            str = "Deglitching: (Core, Tail)\n";
+                            break;
+                         default:
+                            str = "Deglitching: (None)\n";
+                            break;
+                    }
+                    bw.write(str, 0, str.length());
+
+                    str = "The range of wavenumber used in phase-fitting: (" + curr_wn_Bounds[0] +", "
+                          + curr_wn_Bounds[1] + ")";
                     bw.write(str, 0, str.length());
 
                     bw.close();
@@ -1191,7 +1217,7 @@ class DRParametersDlg extends JDialog implements ActionListener
                    return;
               }
 
-              if(new_para[9] > new_para[10] || new_para[9]<0 || new_para[9]>1.0
+              if(new_para[9] >= new_para[10] || new_para[9]<0 || new_para[9]>1.0
                                             || new_para[10]<0 || new_para[10]>1.0)
               {
                    JOptionPane.showMessageDialog(this,

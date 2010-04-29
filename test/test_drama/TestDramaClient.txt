@@ -1,3 +1,3 @@
 ditscmd Drama2FTS EXIT
-ditscmd Drama2FTS SETPARAMETERS "pcfSize_h=60" "dsSize=300" "ssSize=6000" "fittingDegree=2" "weight_limit=0.1" "numThread=4"
+ditscmd Drama2FTS SETPARAMETERS "pcfSize_h=60" "dsSize=300" "ssSize=6000" "fittingDegree=2" "weight_limit=0.1" "wn_lBound=0.05" "wn_uBound=1.0" "deglitch=3" "numThread=4"
 ditscmd Drama2FTS DATAREDUCTION "in=test_rawdata" "out=test_reduced"
