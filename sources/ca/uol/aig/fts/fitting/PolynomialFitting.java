@@ -10,6 +10,7 @@ public class PolynomialFitting
      int polyDegree;
      double[] fittingParam = null;
 
+     double[] x_orig = null, y_orig = null, weights_orig = null;
      /**
       * Constructor.
       * @param polyDegree the degree of the fitting polynomial.
@@ -37,6 +38,7 @@ public class PolynomialFitting
              for(int j=0; j<polyDegree+1; j++)
              {
                  matrixElement[i][j] = coeff[i+j];
+//               System.out.println("("+i+", " +j+") = " +coeff[i+j]);
              }
           return matrixElement;
      }
@@ -82,11 +84,36 @@ public class PolynomialFitting
       */
      public void fit(double[] x, double[] y, double[] weights)
      {
+          x_orig = x;
+          y_orig = y;
+          weights_orig = weights;
           Matrix lsf_matrix = new Matrix(getCoeff(x, weights));
           double[] value = getValue(x, y, weights);
           Matrix lsf_value  = new Matrix(value, value.length);
           fittingParam = lsf_matrix.solve(lsf_value).getColumnPackedCopy();
      }
+
+     /**
+      * get the standard error of the current fitting.
+      * @return the standard deviation.
+      */
+     public double getSTDDev()
+     {
+          double error = 0, total_weights = 0;
+          double[] y_fitting = getResult(x_orig);
+          for(int i=0; i<y_orig.length; i++)
+          {
+               error += weights_orig[i]*(y_fitting[i]-y_orig[i])*(y_fitting[i]-y_orig[i]);
+               total_weights += weights_orig[i];
+/*
+               System.out.println(x_orig[i] + " " + y_orig[i] 
+                                  + " " + y_fitting[i] + " " + weights_orig[i]);
+*/
+          }
+          error = Math.sqrt(error/total_weights);
+          return error;
+     }
+
      /**
       * get the fitting parameters.
       * @return the fitting parameters.
@@ -113,6 +140,24 @@ public class PolynomialFitting
                     y[i] += fittingParam[j] * xn;
                     xn *= x[i];
                }
+          }
+          return y;
+     }
+     /**
+      * use the fitting polynomial to get the new x-y.
+      * @param x the new coordinate.
+      * @return the new value corresponding to x.
+      */
+     public double getResult(double x)
+     {
+          double y;
+          double xn;
+          y = 0;
+          xn = 1.0;
+          for(int j=0; j<polyDegree+1; j++)
+          {
+              y += fittingParam[j] * xn;
+              xn *= x;
           }
           return y;
      }

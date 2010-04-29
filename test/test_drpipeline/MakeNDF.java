@@ -181,11 +181,11 @@ public class MakeNDF
            final int nPoints_Ifgm = DS_LEN + SS_LEN + PCF_LEN;
            final int LEFT_SHIFT = DS_LEN;
 
-           final double NS_Ratio = 0.1;
+           final double NS_Ratio = 0.2;
            final double POS_FLUC = 0.1;
            final double d0 = 0.1*(2.0*Math.PI);
-           final double d1 = 0.7; 
-           final double d2 = 1.5;
+           final double d1 = 1.7; 
+           final double d2 = 2.5;
            
            final boolean Reverse = true;
 

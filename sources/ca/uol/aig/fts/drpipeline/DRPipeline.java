@@ -19,6 +19,7 @@ public class DRPipeline
       double[] mirrorPos;
       NDFIO ndf_ifgm;
       double[][][] ifgm_pc;
+      double[][] phaseFitting_stderr = null;
 
       /**
        * The exact size of the double-sided interferogram used in PhaseCorrection.
@@ -153,7 +154,6 @@ public class DRPipeline
             dataReduction(in, out, numThread);
       }
 
-
       /* this subroutine is used to test individual modules of data reduction */
       private void test_dataReduction(String in, String out)
       {
@@ -200,11 +200,14 @@ public class DRPipeline
             pc_ssSize = pc2fts.get_ssLength();
             pc_pcfSize = pc2fts.get_pcfSize();
 
+            phaseFitting_stderr = new double[arrayWidth][arrayLength];
             ifgm_pc = new double[arrayWidth][arrayLength][];
+            double[] fittingStderr = new double[1];
             for(int i=0; i<arrayWidth; i++)
                for(int j=0; j<arrayLength; j++)
                {
-                     ifgm_pc[i][j] = pc2fts.getInterferogram(ifgm_interp[i][j]);
+                     ifgm_pc[i][j] = pc2fts.getInterferogram(ifgm_interp[i][j], fittingStderr);
+                     phaseFitting_stderr[i][j] = fittingStderr[0];
                }
 
             long t3 = System.currentTimeMillis();
@@ -218,7 +221,10 @@ public class DRPipeline
                      fft2fts.ft(ifgm_pc[i][j]);
                      /* normalize */
                      for(int kk=0; kk<ifgm_pc[i][j].length; kk++)
+                     {
                            ifgm_pc[i][j][kk] /= fft2fts.norm_factor;
+                           if(ifgm_pc[i][j][kk] < 0) ifgm_pc[i][j][kk] = -ifgm_pc[i][j][kk];
+                     }
                }
 
             long t4 = System.currentTimeMillis();
@@ -266,6 +272,8 @@ public class DRPipeline
             /* interpolation, phase-correction, and FFT of interferograms */
             int arrayWidth = ndf_ifgm.get_arrayWidth();
             int arrayLength = ndf_ifgm.get_arrayLength();
+
+            phaseFitting_stderr = new double[arrayWidth][arrayLength];
             ifgm_pc = new double[arrayWidth][arrayLength][];
 
             CubicSplineInterpolation csi2fts = new CubicSplineInterpolation(mirrorPos);
@@ -285,16 +293,21 @@ public class DRPipeline
 
             double[] single_ifgm = null, ifgm_interp = null;
 
+            double[] fittingStderr = new double[1];
             for(int i=0; i<arrayWidth; i++)
                for(int j=0; j<arrayLength; j++)
                {
                      single_ifgm = ndf_ifgm.getInterferogram(i, j);
                      ifgm_interp = csi2fts.interpolate(single_ifgm);
-                     ifgm_pc[i][j] = pc2fts.getInterferogram(ifgm_interp);
+                     ifgm_pc[i][j] = pc2fts.getInterferogram(ifgm_interp, fittingStderr);
+                     phaseFitting_stderr[i][j] = fittingStderr[0];
                      fft2fts.ft(ifgm_pc[i][j]);
                      /* normalize */
                      for(int kk=0; kk<ifgm_pc[i][j].length; kk++)
+                     {
                            ifgm_pc[i][j][kk] /= fft2fts.norm_factor;
+                           if(ifgm_pc[i][j][kk] < 0) ifgm_pc[i][j][kk] = -ifgm_pc[i][j][kk];
+                     }
                      single_ifgm = null;
                      ifgm_interp = null;
                } 
@@ -324,6 +337,8 @@ public class DRPipeline
             /* interpolation, phase-correction, and FFT of interferograms */
             int arrayWidth = ndf_ifgm.get_arrayWidth();
             int arrayLength = ndf_ifgm.get_arrayLength();
+
+            phaseFitting_stderr = new double[arrayWidth][arrayLength];
             ifgm_pc = new double[arrayWidth][arrayLength][];
 
             CubicSplineInterpolation csi2fts = new CubicSplineInterpolation(mirrorPos);
@@ -452,6 +467,7 @@ public class DRPipeline
 
                 double[] single_ifgm, ifgm_interp;
 
+                double[] fittingStderr = new double[1];
                 for(int i=arrayWidth_start; i<=arrayWidth_end; i++)
                    for(int j=0; j<ifgm_pc[0].length; j++)
                    {
@@ -460,13 +476,16 @@ public class DRPipeline
                        /* do interpolation */
                        ifgm_interp = csi2fts_x.interpolate(single_ifgm); 
                        /* do phase-correction */
-                       ifgm_pc[i][j] = pc2fts_x.getInterferogram(ifgm_interp);
+                       ifgm_pc[i][j] = pc2fts_x.getInterferogram(ifgm_interp, fittingStderr);
+                       phaseFitting_stderr[i][j] = fittingStderr[0];
                        /* do FFT, and store the data to ifgm_pc */
                        fft2fts_x.ft(ifgm_pc[i][j]);
                        /* normalize */
                        for(int kk=0; kk<ifgm_pc[i][j].length; kk++)
+                       {
                              ifgm_pc[i][j][kk] /= fft2fts_x.norm_factor;
-
+                             if(ifgm_pc[i][j][kk] < 0) ifgm_pc[i][j][kk] = -ifgm_pc[i][j][kk];
+                       }
                        single_ifgm = null;
                        ifgm_interp = null;
                    }

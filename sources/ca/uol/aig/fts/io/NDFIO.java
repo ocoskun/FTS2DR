@@ -83,6 +83,49 @@ public class NDFIO
      }
 
      /**
+      * Constructor for the purpose of debug.
+      * @param interferogramFile the absolute path of an interferogram file for data reduction.
+      * <br>
+      * Note: no extension for the input data files. Its default extension is .sdf.
+      */
+     public NDFIO(String interferogramFile) 
+     {
+          try
+          {
+              /* get an HDSObject pointing to the interferogram file */
+              hdsInterferogram = HDSObject.hdsOpen(interferogramFile, "READ");
+
+              /* create a new spectrum NDF file. */
+              long[] dims = new long[0];
+
+
+              /* get the dimensions and data type of about interferogram cube and an pointer to the actual
+                 interferogram cube. 
+              */
+              HDSObject hdsData = hdsInterferogram.datFind("DATA_ARRAY").datFind("DATA");
+              if(hdsData != null)
+              {
+                  ifgm_cubeShape = hdsData.datShape();
+                  arrayWidth = (int)ifgm_cubeShape[0];
+                  arrayLength = (int)ifgm_cubeShape[1];
+                  nPoints_Ifgm = (int)ifgm_cubeShape[2];
+
+                  ifgm_cubeSize = hdsData.datSize();
+                  ifgm_cubeType = hdsData.datType();
+
+                  if(ifgm_cubeType.equals("_UWORD")) ifgm_cube = hdsData.datGetvi();
+                  else if(ifgm_cubeType.equals("_WORD")) ifgm_cube = hdsData.datGetvi();
+                  else if(ifgm_cubeType.equals("_INTEGER")) ifgm_cube = hdsData.datGetvi();
+                  else if(ifgm_cubeType.equals("_REAL")) ifgm_cube = hdsData.datGetvr();
+                  else if(ifgm_cubeType.equals("_DOUBLE")) ifgm_cube = hdsData.datGetvd();
+              }
+          }
+          catch(HDSException e)
+          {
+              System.out.println(e);
+          }
+     }
+     /**
       * get the mirror position from the interferogram file.
       */ 
      public double[] getMirrorPos()
