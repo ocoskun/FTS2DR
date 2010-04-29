@@ -601,7 +601,7 @@ public class PhaseCorrection
           }
           else
           {
-              phaseFitting_stderr[0] = 1.0;
+              phaseFitting_stderr[0] = 0.0;
               for(int i=0; i<fittingParam.length; i++)fittingParam[i]=0.0;
               
               phase = new double[dsLength+1];
