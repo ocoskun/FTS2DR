@@ -1,0 +1,9 @@
+MakeNDF: create a NDF file which contains the simulated data
+TestDRPipeline: use class DRPipeline to do data reduction
+TestSpectrum: extract the spectrum of each pixel and save them into the 
+              subdirectory 'data'. The format of these data files is
+              xAA_BB.data, where (AA, BB) represents a pixel, AA=0, ..., 39,
+              BB=0, ..., 31.
+
+jc: compile the above three Java programs.
+jr: run the above three Java programs in order.

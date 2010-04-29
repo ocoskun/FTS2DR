@@ -1,0 +1,4 @@
+TestDramaServer: use class Drama2FTS to start a data reduction Drama task 'Drama2FTS'
+DramaClient.txt: list some examples to demonstrate how to use ditscmd to call Drama2FTS server.
+jc: compile the above Java program.
+jr: run the above Java program.
