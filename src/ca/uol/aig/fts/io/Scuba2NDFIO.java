@@ -95,7 +95,7 @@ public class Scuba2NDFIO extends ca.uol.aig.fts.io.DataIO
           try
           {
               HDSObject hdsPos;
-              hdsPos = hdsInterferogram.datFind("MORE").datFind("FRAMEDATA").datFind("FTS_POS");
+              hdsPos = hdsInterferogram.datFind("MORE").datFind("JCMTSTATE").datFind("FTS_POS");
               if(hdsPos.datType().equals("_REAL")) 
               {
                    float[] pos = hdsPos.datGetvr();
@@ -291,9 +291,9 @@ public class Scuba2NDFIO extends ca.uol.aig.fts.io.DataIO
               wnDims[0] = nPoints_Ifgm;
               for(int i=0; i<nPoints_Ifgm; i++)
                   waveNumber[i] = i*wn_unit/(nPoints_Ifgm-1);
-              hdsSpectrum.datFind("MORE").datFind("FRAMEDATA").datErase("FTS_POS");
-              hdsSpectrum.datFind("MORE").datFind("FRAMEDATA").datNew("FTS_WN", "_DOUBLE", wnDims);
-              hdsSpectrum.datFind("MORE").datFind("FRAMEDATA").datFind("FTS_WN").datPutvd(waveNumber);
+              hdsSpectrum.datFind("MORE").datFind("JCMTSTATE").datErase("FTS_POS");
+              hdsSpectrum.datFind("MORE").datFind("JCMTSTATE").datNew("FTS_WN", "_DOUBLE", wnDims);
+              hdsSpectrum.datFind("MORE").datFind("JCMTSTATE").datFind("FTS_WN").datPutvd(waveNumber);
          }
          catch(HDSException e)
          {
@@ -333,8 +333,8 @@ public class Scuba2NDFIO extends ca.uol.aig.fts.io.DataIO
                            index++;
                        }
 
-                   hdsSpectrum.datFind("MORE").datFind("FRAMEDATA").datNew("FTS_FPM", "_REAL", dims);
-                   hdsSpectrum.datFind("MORE").datFind("FRAMEDATA").datFind("FTS_FPM").datPutvr(params_fitting);
+                   hdsSpectrum.datFind("MORE").datFind("JCMTSTATE").datNew("FTS_FPM", "_REAL", dims);
+                   hdsSpectrum.datFind("MORE").datFind("JCMTSTATE").datFind("FTS_FPM").datPutvr(params_fitting);
               }
               else if(fittingParam instanceof double[][][])
               {
@@ -360,8 +360,8 @@ public class Scuba2NDFIO extends ca.uol.aig.fts.io.DataIO
                            index++;
                        }
                    
-                   hdsSpectrum.datFind("MORE").datFind("FRAMEDATA").datNew("FTS_FPM", "_REAL", dims);
-                   hdsSpectrum.datFind("MORE").datFind("FRAMEDATA").datFind("FTS_FPM").datPutvr(params_fitting);
+                   hdsSpectrum.datFind("MORE").datFind("JCMTSTATE").datNew("FTS_FPM", "_REAL", dims);
+                   hdsSpectrum.datFind("MORE").datFind("JCMTSTATE").datFind("FTS_FPM").datPutvr(params_fitting);
               }
               else
               {
@@ -404,8 +404,8 @@ public class Scuba2NDFIO extends ca.uol.aig.fts.io.DataIO
                           stdError_fitting[index] = stdError[i][j];
                           index++;
                       }
-                   hdsSpectrum.datFind("MORE").datFind("FRAMEDATA").datNew("FTS_STD", "_REAL", dims);
-                   hdsSpectrum.datFind("MORE").datFind("FRAMEDATA").datFind("FTS_STD").datPutvr(stdError_fitting);
+                   hdsSpectrum.datFind("MORE").datFind("JCMTSTATE").datNew("FTS_STD", "_REAL", dims);
+                   hdsSpectrum.datFind("MORE").datFind("JCMTSTATE").datFind("FTS_STD").datPutvr(stdError_fitting);
               }
               else if(fittingSTDError instanceof double[][])
               {
@@ -426,8 +426,8 @@ public class Scuba2NDFIO extends ca.uol.aig.fts.io.DataIO
                            stdError_fitting[index] = (float)stdError[i][j];
                            index++;
                        }
-                   hdsSpectrum.datFind("MORE").datFind("FRAMEDATA").datNew("FTS_STD", "_REAL", dims);
-                   hdsSpectrum.datFind("MORE").datFind("FRAMEDATA").datFind("FTS_STD").datPutvr(stdError_fitting);
+                   hdsSpectrum.datFind("MORE").datFind("JCMTSTATE").datNew("FTS_STD", "_REAL", dims);
+                   hdsSpectrum.datFind("MORE").datFind("JCMTSTATE").datFind("FTS_STD").datPutvr(stdError_fitting);
 
               }
               else
@@ -474,7 +474,7 @@ public class Scuba2NDFIO extends ca.uol.aig.fts.io.DataIO
               HDSObject hdsMore;
               long[] dims = new long[0];
               hdsMore = hdsSpectrum.datFind("MORE");
-              elementName = "FRAMEDATA";
+              elementName = "JCMTSTATE";
               do
               {
                    hdsMore = hdsMore.datFind(elementName);

@@ -4,4 +4,4 @@ TestSpectrum: extract the spectrum of each pixel and save them into the
               subdirectory 'data'. The format of these data files is
               xAA_BB.data, where (AA, BB) represents a pixel, AA=0, ..., 39,
               BB=0, ..., 31.
-DramaClient.txt: list some examples to demonstrate how to use ditscmd to call Drama2FTS server.
+TestDramaClient.txt: list some examples to demonstrate how to use ditscmd to call Drama2FTS server.

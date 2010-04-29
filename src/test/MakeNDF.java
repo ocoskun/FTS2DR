@@ -10,8 +10,8 @@ import java.util.Random;
 public class MakeNDF 
 {
 
-     int arrayWidth = 10;
-     int arrayLength = 10;
+     int arrayWidth = 40;
+     int arrayLength = 32;
      double x_interval = 0.1;
 
      HDSObject hdsInterferogram;
@@ -51,9 +51,9 @@ public class MakeNDF
               HDSObject hdsPos;
               
               hdsInterferogram.datNew("MORE", "EXT", dimx); 
-              hdsInterferogram.datFind("MORE").datNew("FRAMEDATA", "SCUBA2_FM_PAR", dimx);
-              hdsInterferogram.datFind("MORE").datFind("FRAMEDATA").datNew("FTS_POS", "_REAL", dims);
-              hdsInterferogram.datFind("MORE").datFind("FRAMEDATA").datFind("FTS_POS").datPutvr(pos);
+              hdsInterferogram.datFind("MORE").datNew("JCMTSTATE", "RTS_ARR", dimx);
+              hdsInterferogram.datFind("MORE").datFind("JCMTSTATE").datNew("FTS_POS", "_REAL", dims);
+              hdsInterferogram.datFind("MORE").datFind("JCMTSTATE").datFind("FTS_POS").datPutvr(pos);
           }
           catch(HDSException e)
           {

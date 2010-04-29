@@ -2,7 +2,6 @@ package test;
 
 import uk.ac.starlink.hds.HDSObject;
 import uk.ac.starlink.hds.HDSException;
-import java.util.StringTokenizer;
 import java.io.*;
 
 /**

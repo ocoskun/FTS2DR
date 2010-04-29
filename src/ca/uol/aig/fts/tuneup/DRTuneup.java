@@ -1,7 +1,7 @@
 package ca.uol.aig.fts.tuneup;
 
 import ca.uol.aig.fts.common.DRCommonDebug;
-import ca.uol.aig.fts.drpipeline.DRPipelineDebug;
+import ca.uol.aig.fts.drpipeline.DRPipelineTuneup;
 import ca.uol.aig.fts.display.PlotXY;
 
 import javax.swing.BorderFactory;
@@ -69,7 +69,7 @@ public class DRTuneup
      JMenuItem startDR_menuItem = null, stopDR_menuItem;
 
      /* data reduction class */
-     DRPipelineDebug drp = null;
+     DRPipelineTuneup drp = null;
 
      /* raw input NDF file */
      String rawNDFFile = null;
@@ -114,7 +114,7 @@ public class DRTuneup
      /* show the DR result of pixel(index_w, index_h) */
      void showDRResult(int index_w, int index_h)
      {
-          drp.dataReduction_Debug(index_w, index_h, deglitch_flag);
+          drp.dataReduction_Tuneup(index_w, index_h, deglitch_flag);
 
           try
           {
@@ -852,7 +852,7 @@ public class DRTuneup
          public void run()
          {
               Object[] ioParams = new Object[]{rawNDFFile, null};
-              drp = new DRPipelineDebug(ioParams, para_pcfSize_h, para_dsSize, 
+              drp = new DRPipelineTuneup(ioParams, para_pcfSize_h, para_dsSize, 
                            para_ssSize, para_fittingDegree, para_weight_limit, 
                            para_wn_lBound_percent, para_wn_uBound_percent, instrument);
 

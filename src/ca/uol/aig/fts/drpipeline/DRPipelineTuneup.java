@@ -15,7 +15,7 @@ import ca.uol.aig.fts.deglitch.Deglitching;
  * @author Baoshe Zhang
  * @author Astronomial Instrument Group of UoL
  */
-public class DRPipelineDebug
+public class DRPipelineTuneup
 {
       String instrument;
 
@@ -32,7 +32,7 @@ public class DRPipelineDebug
       int new_ssSize = 0;
       
       /* this subroutine is used for the purpose of debug */
-      public DRPipelineDebug(Object[] ioParams, int pcfSize_h, int dsSize, int ssSize, 
+      public DRPipelineTuneup(Object[] ioParams, int pcfSize_h, int dsSize, int ssSize, 
                         int fittingDegree, double weight_limit, 
                         double wn_lBound_percent, double wn_uBound_percent, String instrument)
       {
@@ -92,7 +92,7 @@ public class DRPipelineDebug
             }
       }
       
-      public void dataReduction_Debug(int index_w, int index_l, int deglitch_flag)
+      public void dataReduction_Tuneup(int index_w, int index_l, int deglitch_flag)
       {
             /* interpolation of interferograms */
             double[] single_ifgm;
