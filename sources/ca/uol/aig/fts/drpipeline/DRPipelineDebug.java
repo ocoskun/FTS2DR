@@ -64,7 +64,7 @@ public class DRPipelineDebug
       Deglitching deglitch2fts = null;
 
       /* this subroutine is used for the purpose of debug */
-      public DRPipelineDebug(String in, int pcfSize_h, int dsSize, int ssSize, 
+      public DRPipelineDebug(Object[] ioParams, int pcfSize_h, int dsSize, int ssSize, 
                         int fittingDegree, double weight_limit, 
                         double wn_lBound_percent, double wn_uBound_percent, String instrument)
       {
@@ -90,7 +90,8 @@ public class DRPipelineDebug
 
             /* get the raw data from an interferogram file,
             */
-            ndf_ifgm = getDataIO(in, null, instrument);
+            
+            ndf_ifgm = getDataIO(ioParams, instrument);
 
             /* get the original irregular mirror positions */
             mirrorPos = ndf_ifgm.getOPD();
@@ -154,17 +155,16 @@ public class DRPipelineDebug
       }
 
       /* get a DataIO object for an instrument
-       * @param in the path of the input file
-       * @param out the path of the output file
-       * @param instrument the instrument
+       * @param ioParams the parameters related to the In/Out data files.
+       * @param instrument the instrument.
        */
-      private DataIO getDataIO(String in, String out, String instrument)
+      private DataIO getDataIO(Object[] ioParams, String instrument)
       {
             DataIO dataIO = null;
             try
             {
                 dataIO = (DataIO)Class.forName("ca.uol.aig.fts.io." + instrument + "IO").newInstance();
-                dataIO.init(in, out);
+                dataIO.init(ioParams);
             }
             catch(ClassNotFoundException e)
             {

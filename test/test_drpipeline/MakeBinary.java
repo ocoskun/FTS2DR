@@ -1,46 +1,41 @@
 import java.util.Random;
 import java.io.*;
 
-public class MakePlainText
+public class MakeBinary
 {
 
      int arrayWidth = 2;
      int arrayLength = 3;
      double x_interval = 0.1;
 
-     BufferedWriter outputStream = null;
-     /**
-      * get the mirror position from the interferogram file
-      */ 
+     String ifgmFile = null;
 
-     public MakePlainText(String outfile)
+     public MakeBinary(String ifgmFile)
      {
-           try
-           {
-                outputStream = new BufferedWriter(new FileWriter(outfile));
-           }
-           catch(IOException e)
-           {
-                e.printStackTrace();
-           }
-
+           this.ifgmFile = ifgmFile;
      }
-     void savePlain(float[][][] ifgm_cube, float[] pos)
+     void saveBinary(float[][][] ifgm_cube, float[] pos)
      {
            try
            {
+                FileOutputStream outputStream = new FileOutputStream(ifgmFile);
+                DataOutputStream dos = new DataOutputStream(outputStream);
+
+                int nPoints_Spectrum = ifgm_cube[0][0].length;
+
+                dos.writeInt(arrayWidth);
+                dos.writeInt(arrayLength);
+                dos.writeInt(nPoints_Spectrum);
+                dos.writeInt((int)4);
+
                 for(int k = 0; k < ifgm_cube[0][0].length; k++)
                 {
-//                    outputStream.write(String.format("%1$+10.5e ", pos[k]));
-                    outputStream.write(pos[k] + " ");
+                    dos.writeFloat(pos[k]);
                     for(int j=0; j< ifgm_cube[0].length; j++)
                       for(int i=0; i< ifgm_cube.length; i++)
                       {
-                          outputStream.write(String.format("%1$10.5e     ", 
-                                                           ifgm_cube[i][j][k]));
-//                          outputStream.write(ifgm_cube[i][j][k] + " ");
+                           dos.writeFloat(ifgm_cube[i][j][k]);
                       }
-                    outputStream.write("\n");
                 }
                 outputStream.flush();
                 outputStream.close();
@@ -53,7 +48,6 @@ public class MakePlainText
 
      void createTestData()
      {
-
            final int DS_LEN  = 400;
            final int SS_LEN = 5000;
            final int PCF_LEN = 60;
@@ -83,17 +77,6 @@ public class MakePlainText
            float[] ifgm0 = new float[nPoints_Ifgm];
            float[] ifgm1 = new float[nPoints_Ifgm];
 
-
-           try
-           {
-                String str = new String(arrayWidth + " " + arrayLength 
-                                        + " " + nPoints_Ifgm + "\n");
-                outputStream.write(str);
-           }
-           catch(IOException e)
-           {
-                e.printStackTrace();
-           }
 
            double max_rand_coeff = 0.0D;
            for(int k=0; k<nPoints_Ifgm; k++)
@@ -239,7 +222,7 @@ public class MakePlainText
            saveIfgm(ifgm1, pos,  "fft_xy.dat");
            saveIfgm(ifgm_cube[0][0], pos, "fft_xy1.dat");
 */
-           savePlain(ifgm_cube, pos);
+           saveBinary(ifgm_cube, pos);
      }
 
      public static void main(String[] args)
@@ -250,8 +233,8 @@ public class MakePlainText
                outfile = args[0];
            }
            System.out.println("MakeNDF: OUT = " + outfile);
-           MakePlainText mn = new MakePlainText(outfile);
+           MakeBinary mb = new MakeBinary(outfile);
 
-           mn.createTestData();
+           mb.createTestData();
      }
 }

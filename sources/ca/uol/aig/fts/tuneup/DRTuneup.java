@@ -844,7 +844,8 @@ if(curr_phaseFittingStdErr_debug > 0.5)
     {
          public void run()
          {
-              drp = new DRPipelineDebug(rawNDFFile, para_pcfSize_h, para_dsSize, 
+              Object[] ioParams = new Object[]{rawNDFFile, null};
+              drp = new DRPipelineDebug(ioParams, para_pcfSize_h, para_dsSize, 
                            para_ssSize, para_fittingDegree, para_weight_limit, 
                            para_wn_lBound_percent, para_wn_uBound_percent, "Scuba2NDF");
 

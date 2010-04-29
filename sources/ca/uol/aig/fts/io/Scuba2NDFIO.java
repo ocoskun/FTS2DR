@@ -23,13 +23,16 @@ public class Scuba2NDFIO extends ca.uol.aig.fts.io.DataIO
 
      /**
       * Initializer.
-      * @param interferogramFile the absolute path of an interferogram file for data reduction.
-      * @param spectrumFile      the absolute path of the spectrum file from data reduction.
+      * @param ioParams the parameters related to the In/Out data file. The first one is
+      * the absolute path of an interferogram file for data reduction; the second one is
+      * the absolute path of the spectrum file from data reduction.
       * <br>
       * Note: no extension for these two data files. Their default extension is .sdf.
       */ 
-     public void init(String interferogramFile, String spectrumFile)
+     public void init(Object[] ioParams)
      {
+          String interferogramFile = (String)ioParams[0];
+          String spectrumFile = (String)ioParams[1];
           try
           {
               /* get an HDSObject pointing to the interferogram file */
@@ -149,7 +152,7 @@ public class Scuba2NDFIO extends ca.uol.aig.fts.io.DataIO
      /**
       * get the number of the data of one interferogram.
       */
-     public int get_npoints_ifgm()
+     public int get_nPoints_Ifgm()
      {
           return nPoints_Ifgm;
      }

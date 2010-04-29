@@ -117,7 +117,8 @@ class DataReductionAction implements DramaTask.Action
         String outPath = arg.StringValue("out");
 
         t.MsgOut(">>> Data Reduction: <IN=" + inPath + ">:<OUT=" + outPath +">");
-        DRPipeline dp = new DRPipeline(inPath, outPath,
+        Object[] ioParams = new Object[]{inPath, outPath};
+        DRPipeline dp = new DRPipeline(ioParams,
                                        DataReductionParameters.pc_pcfSize_h,
                                        DataReductionParameters.pc_dsSize,
                                        DataReductionParameters.pc_ssSize,
@@ -128,9 +129,9 @@ class DataReductionAction implements DramaTask.Action
                                        DataReductionParameters.pc_deglitch,
                                        DataReductionParameters.pc_numThread,
                                        "Scuba2NDF"); 
-        t.MsgOut("   Phase Correction : dsSize = "  + dp.pc_dsSize 
-                                   + ", ssSize = "  + dp.pc_ssSize 
-                                   + ", pcfSize = " + dp.pc_pcfSize);
+        t.MsgOut("   Phase Correction : dsSize = "  + dp.get_dsSize() 
+                                   + ", ssSize = "  + dp.get_ssSize() 
+                                   + ", pcfSize = " + dp.get_pcfSize());
         t.MsgOut("End of Data Reduction");
         t.PutRequestEnd();
     }

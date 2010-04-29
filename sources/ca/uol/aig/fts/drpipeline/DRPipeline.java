@@ -31,7 +31,7 @@ public class DRPipeline
        * PhaseCorrection will use initial values of ZPD_value, dsSize, ssSize and
        * pcfSize_h to get new values for dsSize and ssSize.
        */
-      public int pc_dsSize;
+      int pc_dsSize;
 
       /**
        * The exact size of the single-sided interferogram used in PhaseCorrection.
@@ -39,18 +39,17 @@ public class DRPipeline
        * pcfSize_h to get new values for dsSize and ssSize.
        */
 
-      public int pc_ssSize;
+      int pc_ssSize;
       /**
        * The exact size of the phasecorrection function used in PhaseCorrection.
        * PhaseCorrection will use initial values of ZPD_value, dsSize, ssSize and
        * pcfSize_h to get new values for dsSize and ssSize.
        */
-      public int pc_pcfSize;
+      int pc_pcfSize;
 
       /**
        * Constructor (single-thread version)
-       * @param in the path of the raw data file.
-       * @param out the path of the reduced data file.
+       * @param ioParams the parameters related to the In/Out data files.
        * @param pcfSize_h the half of the size of the phase correction function.
        * @param dsSize the half of the size of the doube-size interferogram.
        * @param ssSize the half of the size of the single-side interferogram.
@@ -68,7 +67,7 @@ public class DRPipeline
        *      other values: no deglitching.
        * @param instrument For FTS-2, instrument = 'Scuba2NDF'.
        */
-      public DRPipeline(String in, String out, int pcfSize_h, 
+      public DRPipeline(Object[] ioParams, int pcfSize_h, 
                         int dsSize, int ssSize, int fittingDegree, 
                         double weight_limit, double ZPD_value, 
                         double wn_lBound_percent, double wn_uBound_percent,
@@ -96,12 +95,11 @@ public class DRPipeline
             this.deglitching_flag = deglitching_flag;
 
 //          test_dataReduction(in, out); 
-            dataReduction(in, out);
+            dataReduction(ioParams);
       }
       /**
        * Constructor (single-thread version with a default ZPD)
-       * @param in the path of the raw data file.
-       * @param out the path of the reduced data file.
+       * @param ioParams the parameters related to the In/Out data files.
        * @param pcfSize_h the half of the size of the phase correction function.
        * @param dsSize the half of the size of the doube-size interferogram.
        * @param ssSize the half of the size of the single-side interferogram.
@@ -120,7 +118,7 @@ public class DRPipeline
        * <br>
        * In this constructor,  ZPD_value = 0.
        */
-      public DRPipeline(String in, String out, int pcfSize_h,
+      public DRPipeline(Object[] ioParams, int pcfSize_h,
                         int dsSize, int ssSize, int fittingDegree,
                         double weight_limit, 
                         double wn_lBound_percent, double wn_uBound_percent,
@@ -150,13 +148,12 @@ public class DRPipeline
 
             this.deglitching_flag = deglitching_flag;
 
-            dataReduction(in, out);
+            dataReduction(ioParams);
       }
 
       /**
        * Constructor (multi-thread version)
-       * @param in the path of the raw data file.
-       * @param out the path of the reduced data file.
+       * @param ioParams the parameters related to the In/Out data files.
        * @param pcfSize_h the half of the size of the phase correction function.
        * @param dsSize the half of the size of the doube-size interferogram.
        * @param ssSize the half of the size of the single-size interferogram.
@@ -175,7 +172,7 @@ public class DRPipeline
        * @param numThread the number of the computing threads.
        * @param instrument For FTS-2, instrument = 'Scuba2NDF'.
        */
-      public DRPipeline(String in, String out, int pcfSize_h,
+      public DRPipeline(Object[] ioParams, int pcfSize_h,
                         int dsSize, int ssSize, int fittingDegree,
                         double weight_limit, double ZPD_value, 
                         double wn_lBound_percent, double wn_uBound_percent,
@@ -205,12 +202,11 @@ public class DRPipeline
             this.wn_uBound_percent = wn_uBound_percent;
             this.deglitching_flag = deglitching_flag;
 
-            dataReduction(in, out, numThread);
+            dataReduction(ioParams, numThread);
       }
       /**
        * Constructor (multi-thread version with a default ZPD)
-       * @param in the path of the raw data file.
-       * @param out the path of the reduced data file.
+       * @param ioParams the parameters related to the In/Out data files.
        * @param pcfSize_h the half of the size of the phase correction function.
        * @param dsSize the half of the size of the doube-size interferogram.
        * @param ssSize the half of the size of the single-size interferogram.
@@ -231,7 +227,7 @@ public class DRPipeline
        * <br>
        * In this constructor, ZPD_value = 0.
        */
-      public DRPipeline(String in, String out, int pcfSize_h,
+      public DRPipeline(Object[] ioParams, int pcfSize_h,
                         int dsSize, int ssSize, int fittingDegree,
                         double weight_limit, 
                         double wn_lBound_percent, double wn_uBound_percent,
@@ -261,21 +257,29 @@ public class DRPipeline
             this.wn_uBound_percent = wn_uBound_percent;
             this.deglitching_flag = deglitching_flag;
 
-            dataReduction(in, out, numThread);
+            dataReduction(ioParams, numThread);
       }
 
       /* get a DataIO object for an instrument 
-       * @param in the path of the input file
-       * @param out the path of the output file
-       * @param instrument the instrument
+       * @param ioParams the parameters related to the In/Out data files.
+       * @param instrument the instrument.
        */
-      private DataIO getDataIO(String in, String out, String instrument)
+      private DataIO getDataIO(Object[] ioParams, String instrument)
       {
             DataIO dataIO = null;
             try
             {
-                dataIO = (DataIO)Class.forName("ca.uol.aig.fts.io." + instrument + "IO").newInstance();
-                dataIO.init(in, out);
+                String ioClassName;
+                if(instrument.indexOf('.') == -1)
+                {
+                    ioClassName = "ca.uol.aig.fts.io." + instrument + "IO";
+                }
+                else
+                {
+                    ioClassName = instrument;
+                }
+                dataIO = (DataIO)Class.forName(ioClassName).newInstance();
+                dataIO.init(ioParams);
             }
             catch(ClassNotFoundException e) 
             {
@@ -297,7 +301,7 @@ public class DRPipeline
       }
 
       /* this subroutine is used to test individual modules of data reduction */
-      private void test_dataReduction(String in, String out)
+      private void test_dataReduction(Object[] ioParams)
       {
             /* get the raw data from an interferogram file,
                create a new spectrum file
@@ -305,7 +309,7 @@ public class DRPipeline
             long t0 = System.currentTimeMillis();
 
 //            ndf_ifgm = new NDFIO(in, out);
-             ndf_ifgm = getDataIO(in, out, instrument);
+             ndf_ifgm = getDataIO(ioParams, instrument);
 
             /* get the original irregular mirror positions */
             mirrorPos = ndf_ifgm.getOPD();
@@ -397,13 +401,13 @@ public class DRPipeline
       }
 
       /* single-thread version of data reduction */
-      private void dataReduction(String in, String out)
+      private void dataReduction(Object[] ioParams)
       {
             /* get the raw data from an interferogram file,
              *  create a new spectrum file
              */
 //            ndf_ifgm = new NDFIO(in, out);
-            ndf_ifgm = getDataIO(in, out, instrument);
+            ndf_ifgm = getDataIO(ioParams, instrument);
 
             /* get the original irregular mirror positions */
             mirrorPos = ndf_ifgm.getOPD();
@@ -467,12 +471,12 @@ public class DRPipeline
       }
 
       /* multi-thread version of data reduction */
-      private void dataReduction(String in, String out, int numThread)
+      private void dataReduction(Object[] ioParams, int numThread)
       {
             /* when numThread is less than 2, use single-thread version of data reduction */
             if(numThread <= 1)
             {
-                 dataReduction(in, out);
+                 dataReduction(ioParams);
                  return;
             }
 
@@ -480,7 +484,7 @@ public class DRPipeline
                create a new spectrum file
             */
 //            ndf_ifgm = new NDFIO(in, out);
-            ndf_ifgm = getDataIO(in, out, instrument);
+            ndf_ifgm = getDataIO(ioParams, instrument);
 
             /* get the original irregular mirror positions */
             mirrorPos = ndf_ifgm.getOPD();
@@ -564,6 +568,30 @@ public class DRPipeline
             ndf_ifgm.closeSpectrum();
       }
      
+      /**
+       * get the exact size of the single-sided interferogram.
+       */
+      public int get_ssSize()
+      {
+            return pc_ssSize;
+      }
+
+      /**
+       * get the exact size of the double-sided interferogram.
+       */
+      public int get_dsSize()
+      {
+            return pc_dsSize;
+      }
+
+      /**
+       * get the exact size of the PCF.
+       */
+      public int get_pcfSize()
+      {
+            return pc_pcfSize;
+      }
+
       /* the thread for data reduction */
       private class CalcSpectrum_Thread implements Runnable
       {

@@ -26,7 +26,8 @@ public class TestDRPipeline
 
         long t0 = System.currentTimeMillis();
 
-	DRPipeline drp = new DRPipeline(infile, outfile, 80, 300, 6000, 2, 0.1, 
+        Object[] ioParams = new Object[]{infile, outfile};
+	DRPipeline drp = new DRPipeline(ioParams, 80, 300, 6000, 2, 0.1, 
                                      0.05, 0.8, 3, numThread, instrument);
 
         System.out.println("Time = " + (System.currentTimeMillis() - t0));

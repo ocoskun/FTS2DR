@@ -8,14 +8,15 @@ import java.io.*;
  * @author Baoshe Zhang
  * @author Astronomical Instrument Group, University of Lethbridge 
  */
-public class PlainTextIO extends ca.uol.aig.fts.io.DataIO
+public class BinaryIO extends ca.uol.aig.fts.io.DataIO
 {
      int arrayWidth;
      int arrayLength;
      int nPoints_Ifgm;
      double[][][] ifgmCube = null;
      double[] opd = null;
-     BufferedWriter outputStream;
+
+     String spectrumFile;
 
      /**
       * Initializer.
@@ -28,37 +29,52 @@ public class PlainTextIO extends ca.uol.aig.fts.io.DataIO
      public void init(Object[] ioParams)
      {
            String interferogramFile = (String)ioParams[0];
-           String spectrumFile = (String)ioParams[1];
+           this.spectrumFile = (String)ioParams[1];
 
            try
            {
-               BufferedReader inputStream = new BufferedReader(new FileReader(interferogramFile));
-               outputStream = new BufferedWriter(new FileWriter(spectrumFile));  
-               String inLine;
-               String[] str;
-               inLine = inputStream.readLine();
-               str = inLine.split(" ");
-               arrayWidth = Integer.parseInt(str[0]);
-               arrayLength = Integer.parseInt(str[1]);
-               nPoints_Ifgm = Integer.parseInt(str[2]);
+               FileInputStream inputStream = new FileInputStream(interferogramFile);
+               DataInputStream dis = new DataInputStream(inputStream);
+
+               arrayWidth = dis.readInt();
+               arrayLength = dis.readInt();
+               nPoints_Ifgm = dis.readInt();
+
+               int dataType = dis.readInt();
 
                opd = new double[nPoints_Ifgm];
                ifgmCube = new double[arrayWidth][arrayLength][nPoints_Ifgm];
-               for(int i=0; i<nPoints_Ifgm; i++)
+
+               if(dataType == 4)
                {
-                    inLine = inputStream.readLine();
-                    while(inLine.indexOf("  ") != -1) 
-                         inLine = inLine.replaceAll("  ", " ");
-                    str = inLine.split(" ");
-                    opd[i] = Double.parseDouble(str[0]);
-                    int index = 1;
-                    for(int j=0; j<arrayWidth; j++)
-                       for(int k=0; k<arrayLength; k++)
-                       {
-                           ifgmCube[j][k][i] = Double.parseDouble(str[index]);
-                           index++;
-                       }
+                    for(int i=0; i<nPoints_Ifgm; i++)
+                    {
+                         opd[i] = dis.readFloat();
+                         for(int j=0; j<arrayWidth; j++)
+                         for(int k=0; k<arrayLength; k++)
+                         {
+                              ifgmCube[j][k][i] = dis.readFloat();
+                         }
+                     }
                }
+               else if(dataType == 8)
+               {
+                    for(int i=0; i<nPoints_Ifgm; i++)
+                    {
+                         opd[i] = dis.readDouble();
+                         for(int j=0; j<arrayWidth; j++)
+                         for(int k=0; k<arrayLength; k++)
+                         {
+                              ifgmCube[j][k][i] = dis.readDouble();
+                         }
+                     }
+               }
+               else
+               {
+                     System.err.println("data type is not supported yet!");
+                     System.exit(0);
+               }
+
                inputStream.close();
            }
            catch(IOException e)
@@ -118,19 +134,28 @@ public class PlainTextIO extends ca.uol.aig.fts.io.DataIO
      {
           double[][][] spectrum = (double[][][])spectrumCube;
           int nPoints_Spectrum = spectrum[0][0].length;
+
           String str = null;
           try
           {
+              FileOutputStream outputStream = new FileOutputStream(spectrumFile);
+              DataOutputStream dos = new DataOutputStream(outputStream);
+
+
+              dos.writeInt(arrayWidth);
+              dos.writeInt(arrayLength);
+              dos.writeInt(nPoints_Spectrum);
+              dos.writeInt((int)8);
+
               for(int i=0; i<nPoints_Spectrum; i++)
               {
-                    outputStream.write(String.format("%1$10.5e ", i*wn_unit/(nPoints_Spectrum-1)));
+                    dos.writeDouble(i*wn_unit/(nPoints_Spectrum-1));
 
                     for(int j=0; j<arrayWidth; j++)
                       for(int k=0; k<arrayLength; k++)
                       {
-                          outputStream.write(String.format("%1$10.5e ", spectrum[j][k][i]));
+                          dos.writeDouble(spectrum[j][k][i]);
                       }
-                    outputStream.write("\n");
               }
               outputStream.flush();
               outputStream.close();

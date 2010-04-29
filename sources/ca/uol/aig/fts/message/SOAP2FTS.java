@@ -57,7 +57,8 @@ public class SOAP2FTS
      public void dataReduction(String inPath, String outPath)
      {
           System.out.println(">>> Data Reduction: <IN=" + inPath + ">:<OUT=" + outPath +">");
-          new DRPipeline(inPath, outPath, pcfSize_h, dsSize, ssSize, phaseFittingdegree, 
+          Object[] ioParams = new Object[]{inPath, outPath};
+          new DRPipeline(ioParams, pcfSize_h, dsSize, ssSize, phaseFittingdegree, 
                          weight_limit, wn_lBound, wn_uBound, deglitching_flag, numThread,
                          "Scuba2NDF");
 
