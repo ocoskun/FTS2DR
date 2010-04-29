@@ -385,8 +385,10 @@ public class DRPipeline
             System.out.println("FFT Time : " + (t4 - t3));
 
             /* save the spectrum to a file */
-            ndf_ifgm.saveSpectrum(ifgm_pc);
+            double wn_unit = 0;
+            if(csi2fts.getNewInterval() != 0) wn_unit = 1.0D/csi2fts.getNewInterval();
 
+            ndf_ifgm.saveSpectrum(ifgm_pc, wn_unit);
             ndf_ifgm.closeSpectrum();
 
             long t5 = System.currentTimeMillis();
@@ -456,7 +458,12 @@ public class DRPipeline
                } 
 
             /* save the spectrum to a file */
-            saveSpectrum();
+            double wn_unit = 0;
+            if(csi2fts.getNewInterval() != 0) wn_unit = 1.0D/csi2fts.getNewInterval();
+
+            ndf_ifgm.saveSpectrum(ifgm_pc, wn_unit);
+            ndf_ifgm.closeSpectrum();
+
       }
 
       /* multi-thread version of data reduction */
@@ -550,17 +557,13 @@ public class DRPipeline
             }
 
             /* save the spectrum to a file */
-            saveSpectrum();
-      }
-     
-      /* save the spectrum to a data file */
-      private void saveSpectrum()
-      {
-            ndf_ifgm.saveSpectrum(ifgm_pc);
+            double wn_unit = 0;
+            if(csi2fts.getNewInterval() != 0) wn_unit = 1.0D/csi2fts.getNewInterval();
 
+            ndf_ifgm.saveSpectrum(ifgm_pc, wn_unit);
             ndf_ifgm.closeSpectrum();
       }
-      
+     
       /* the thread for data reduction */
       private class CalcSpectrum_Thread implements Runnable
       {

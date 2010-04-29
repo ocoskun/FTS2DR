@@ -182,7 +182,7 @@ public class MakeNDF
 
            final int DS_LEN  = 400;
            final int SS_LEN = 5000;
-           final int PCF_LEN = 60;
+           final int PCF_LEN = 80;
 
            final int nPoints_Ifgm = DS_LEN + SS_LEN + PCF_LEN;
            final int LEFT_SHIFT = DS_LEN;

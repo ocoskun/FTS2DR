@@ -215,11 +215,13 @@ public class Scuba2NDFIO extends ca.uol.aig.fts.io.DataIO
      /**
       * save the spectrum cube to the spectrum file.
       * @param spectrumCube the spectrum cube.
+      * @param wn_unit the unit of the wavenumbers.
       */
-     public void saveSpectrum(Object spectrumCube)
+     public void saveSpectrum(Object spectrumCube, double wn_unit)
      {
          try
          {
+              int nPoints_Ifgm = 0;
               if(spectrumCube instanceof float[][][])
               {
                    float[][][] cube_spectrum = (float[][][])spectrumCube;
@@ -228,6 +230,8 @@ public class Scuba2NDFIO extends ca.uol.aig.fts.io.DataIO
                    dims[0] = cube_spectrum.length;
                    dims[1] = cube_spectrum[0].length;
                    dims[2] = cube_spectrum[0][0].length;
+
+                   nPoints_Ifgm = (int)dims[2];
 
                    int cubeSize = (int)(dims[0] * dims[1] * dims[2]);
 
@@ -254,6 +258,8 @@ public class Scuba2NDFIO extends ca.uol.aig.fts.io.DataIO
                    dims[1] = cube_spectrum[0].length;
                    dims[2] = cube_spectrum[0][0].length;
 
+                   nPoints_Ifgm = (int)dims[2];
+
                    int cubeSize = (int)(dims[0] * dims[1] * dims[2]);
 
                    float[] spectrum = new float[cubeSize];
@@ -278,6 +284,14 @@ public class Scuba2NDFIO extends ca.uol.aig.fts.io.DataIO
                    System.out.println("The data type is not supported! And the data is not saved!!!");
               }
 
+              double[] waveNumber = new double[nPoints_Ifgm];
+              long[] wnDims = new long[1];
+              wnDims[0] = nPoints_Ifgm;
+              for(int i=0; i<nPoints_Ifgm; i++)
+                  waveNumber[i] = i*wn_unit/(nPoints_Ifgm-1);
+              hdsSpectrum.datFind("MORE").datFind("FRAMEDATA").datErase("FTS_POS");
+              hdsSpectrum.datFind("MORE").datFind("FRAMEDATA").datNew("FTS_WN", "_DOUBLE", wnDims);
+              hdsSpectrum.datFind("MORE").datFind("FRAMEDATA").datFind("FTS_WN").datPutvd(waveNumber);
          }
          catch(HDSException e)
          {

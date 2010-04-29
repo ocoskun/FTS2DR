@@ -106,8 +106,9 @@ public class PlainTextIO extends ca.uol.aig.fts.io.DataIO
      /**
       * save the spectrum cube to the spectrum file.
       * @param spectrumCube the spectrum cube.
+      * @param wn_unit the unit of the wavenumbers.
       */
-     public void saveSpectrum(Object spectrumCube)
+     public void saveSpectrum(Object spectrumCube, double wn_unit)
      {
           double[][][] spectrum = (double[][][])spectrumCube;
           int nPoints_Spectrum = spectrum[0][0].length;
@@ -116,15 +117,17 @@ public class PlainTextIO extends ca.uol.aig.fts.io.DataIO
           {
               for(int i=0; i<nPoints_Spectrum; i++)
               {
-                    outputStream.write(i + " ");
+                    outputStream.write(String.format("%1$10.5e ", i*wn_unit/(nPoints_Spectrum-1)));
 
                     for(int j=0; j<arrayWidth; j++)
                       for(int k=0; k<arrayLength; k++)
                       {
-                          outputStream.write(spectrum[j][k][i] + " ");
+                          outputStream.write(String.format("%1$10.5e ", spectrum[j][k][i]));
                       }
                     outputStream.write("\n");
               }
+              outputStream.flush();
+              outputStream.close();
           }
           catch(IOException e)
           {

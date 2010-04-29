@@ -25,8 +25,10 @@ public class TestDRPipeline
                             + ", IN = " + infile + ", OUT = " + outfile);
 
         long t0 = System.currentTimeMillis();
+
 	DRPipeline drp = new DRPipeline(infile, outfile, 80, 300, 6000, 2, 0.1, 
                                      0.05, 0.8, 3, numThread, instrument);
+
         System.out.println("Time = " + (System.currentTimeMillis() - t0));
     }
 }

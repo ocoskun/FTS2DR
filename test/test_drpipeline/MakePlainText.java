@@ -31,14 +31,17 @@ public class MakePlainText
            {
                 for(int k = 0; k < ifgm_cube[0][0].length; k++)
                 {
+//                    outputStream.write(String.format("%1$10.5e ", pos[k]));
                     outputStream.write(pos[k] + " ");
                     for(int j=0; j< ifgm_cube[0].length; j++)
                       for(int i=0; i< ifgm_cube.length; i++)
                       {
+//                          outputStream.write(String.format("%1$10.5e  ", ifgm_cube[i][j][k]));
                           outputStream.write(ifgm_cube[i][j][k] + " ");
                       }
                     outputStream.write("\n");
                 }
+                outputStream.flush();
                 outputStream.close();
            }
            catch(IOException e)

@@ -63,7 +63,7 @@ public abstract class DataIO
       * save the spectrum cube to the spectrum file.
       * @param spectrumCube the spectrum cube.
       */
-     public abstract void saveSpectrum(Object spectrumCube);
+     public abstract void saveSpectrum(Object spectrumCube, double wavenumber_unit);
 
      /**
       * close the spectrum file and/or the interferogram file.
