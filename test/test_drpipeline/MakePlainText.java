@@ -1,181 +1,51 @@
-import uk.ac.starlink.hds.HDSObject;
-import uk.ac.starlink.hds.HDSException;
-import java.util.StringTokenizer;
 import java.util.Random;
 import java.io.*;
 
-public class MakeNDF 
+public class MakePlainText
 {
 
-     int arrayWidth = 40;
-     int arrayLength = 32;
+     int arrayWidth = 2;
+     int arrayLength = 3;
      double x_interval = 0.1;
 
-     HDSObject hdsInterferogram;
-
-     public MakeNDF(String interferogramFile) 
-     {
-          try
-          {
-              /* create a new spectrum NDF file. */
-              long[] dims = new long[0];
-              String interferogramFile_rel = interferogramFile.substring(
-                                  interferogramFile.lastIndexOf("/")+1, 
-                                  interferogramFile.length());
-              hdsInterferogram = HDSObject.hdsNew(interferogramFile, 
-                                  interferogramFile_rel, "NDF", dims);
-
-              /* create a structure 'DATA_ARRAY' in this file. */
-              hdsInterferogram.datNew("DATA_ARRAY", "ARRAY", dims);
-          }
-          catch(HDSException e)
-          {
-              System.out.println(e);
-          }
-     }
-
+     BufferedWriter outputStream = null;
      /**
       * get the mirror position from the interferogram file
       */ 
 
-     public void saveMirrorPos(float[] pos)
+     public MakePlainText(String outfile)
      {
-          try
-          {
-              long[] dims = new long[1],  dimx = new long[0];
-              dims[0] = pos.length;
-
-              HDSObject hdsPos;
-              
-              hdsInterferogram.datNew("MORE", "EXT", dimx); 
-              hdsInterferogram.datFind("MORE").datNew("FRAMEDATA", "SCUBA2_FM_PAR", dimx);
-              hdsInterferogram.datFind("MORE").datFind("FRAMEDATA").datNew("FTS_POS", "_REAL", dims);
-              hdsInterferogram.datFind("MORE").datFind("FRAMEDATA").datFind("FTS_POS").datPutvr(pos);
-          }
-          catch(HDSException e)
-          {
-              System.out.println(e);
-          }
-     }
-
-
-     /**
-      * save the spectrum cube to the spectrum file
-      * @param spectrum the spectrum cube in 1-D Fortran data order
-      * @param dims     the dimension information of the spectrum
-      */
-     public void saveInterferogram(int[] spectrum, long[] dims)
-     {
-         try
-         {
-              hdsInterferogram.datFind("DATA_ARRAY").datNew("DATA", "_INTEGER", dims);
-              hdsInterferogram.datFind("DATA_ARRAY").datFind("DATA").datPutvi(spectrum);
-         }
-         catch(HDSException e)
-         {
-              System.out.println(e);
-         }
-     }
-     /**
-      * save the spectrum cube to the spectrum file
-      * @param spectrum the spectrum cube in 1-D Fortran data order
-      * @param dims     the dimension information of the spectrum
-      */
-     public void saveInterferogram(float[] spectrum, long[] dims)
-     {
-
-         for(int i=0; i<dims.length; i++)
-            System.out.println("dim[" + i + "]=" + dims[i]);
-
-         try
-         {
-              hdsInterferogram.datFind("DATA_ARRAY").datNew("DATA", "_REAL", dims);
-              hdsInterferogram.datFind("DATA_ARRAY").datFind("DATA").datPutvr(spectrum);
-         }
-         catch(HDSException e)
-         {
-              System.out.println(e);
-         }
- 
-     }
-     /**
-      * save the spectrum cube to the spectrum file
-      * @param spectrum the spectrum cube in 1-D Fortran format
-      * @param dims     the dimension information of the spectrum
-      */
-     public void saveInterferogram(double[] spectrum, long[] dims)
-     {
-         try
-         {
-              hdsInterferogram.datFind("DATA_ARRAY").datNew("DATA", "_DOUBLE", dims);
-              hdsInterferogram.datFind("DATA_ARRAY").datFind("DATA").datPutvd(spectrum);
-         }
-         catch(HDSException e)
-         {
-              System.out.println(e);
-         }
-     }
-     /**
-      * close the handle of the spectrum file
-      */
-     public void closeInterferogram()
-     {
-         try
-         {
-              hdsInterferogram.datAnnul();
-              hdsInterferogram = null;
-         }
-         catch(HDSException e)
-         {
-              System.out.println(e);
-         }
-     }
-
-     void createNDF(float[][][] ifgm_cube, float[] pos)
-     {
-           saveMirrorPos(pos);
-
-           long[] ifgm_cubeShape = new long[3];
-           ifgm_cubeShape[0] = ifgm_cube.length;
-           ifgm_cubeShape[1] = ifgm_cube[0].length;
-           ifgm_cubeShape[2] = ifgm_cube[0][0].length;
-
-
-           long ifgm_cubeSize = ifgm_cubeShape[0]*ifgm_cubeShape[1]*ifgm_cubeShape[2];
-
-           float[] ifgm = new float[(int)ifgm_cubeSize];
-
-           int index = 0;
-           for(int k = 0; k < ifgm_cube[0][0].length; k++)
-              for(int j=0; j< ifgm_cube[0].length; j++)
-                 for(int i=0; i< ifgm_cube.length; i++)
-                 {
-                      ifgm[index] = ifgm_cube[i][j][k];
-                      index++;
-                 }
-           saveInterferogram(ifgm, ifgm_cubeShape);
-           closeInterferogram();
-     }
-
-     void saveIfgm(float[] ifgm, float[] pos, String fileName)
-     {
-           String str;
            try
            {
-                BufferedWriter bw = new BufferedWriter(new FileWriter(fileName));
-                for(int i=0; i<pos.length; i++)
+                outputStream = new BufferedWriter(new FileWriter(outfile));
+           }
+           catch(IOException e)
+           {
+                e.printStackTrace();
+           }
+
+     }
+     void savePlain(float[][][] ifgm_cube, float[] pos)
+     {
+           try
+           {
+                for(int k = 0; k < ifgm_cube[0][0].length; k++)
                 {
-                    str = (pos[i] + " " + ifgm[i] + "\n");
-                    bw.write(str, 0, str.length());
+                    outputStream.write(pos[k] + " ");
+                    for(int j=0; j< ifgm_cube[0].length; j++)
+                      for(int i=0; i< ifgm_cube.length; i++)
+                      {
+                          outputStream.write(ifgm_cube[i][j][k] + " ");
+                      }
+                    outputStream.write("\n");
                 }
-                bw.close();
+                outputStream.close();
            }
            catch(IOException e)
            {
                 e.printStackTrace();
            }
      }
-
 
      void createTestData()
      {
@@ -208,6 +78,18 @@ public class MakeNDF
            float[] pos0 = new float[nPoints_Ifgm];
            float[] ifgm0 = new float[nPoints_Ifgm];
            float[] ifgm1 = new float[nPoints_Ifgm];
+
+
+           try
+           {
+                String str = new String(arrayWidth + " " + arrayLength 
+                                        + " " + nPoints_Ifgm + "\n");
+                outputStream.write(str);
+           }
+           catch(IOException e)
+           {
+                e.printStackTrace();
+           }
 
            double max_rand_coeff = 0.0D;
            for(int k=0; k<nPoints_Ifgm; k++)
@@ -348,12 +230,12 @@ public class MakeNDF
 //                System.out.println(k + ":" + "max_coeff_x = " + max_coeff_x);
            }
            System.out.println(">>>> max_rand_coeff = " + max_rand_coeff + " <<<<");
-
+/*
            saveIfgm(ifgm0, pos0, "fft_xy0.dat");
            saveIfgm(ifgm1, pos,  "fft_xy.dat");
            saveIfgm(ifgm_cube[0][0], pos, "fft_xy1.dat");
-
-           createNDF(ifgm_cube, pos);
+*/
+           savePlain(ifgm_cube, pos);
      }
 
      public static void main(String[] args)
@@ -364,7 +246,7 @@ public class MakeNDF
                outfile = args[0];
            }
            System.out.println("MakeNDF: OUT = " + outfile);
-           MakeNDF mn = new MakeNDF(outfile);
+           MakePlainText mn = new MakePlainText(outfile);
 
            mn.createTestData();
      }

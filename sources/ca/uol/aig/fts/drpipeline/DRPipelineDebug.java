@@ -1,6 +1,6 @@
 package ca.uol.aig.fts.drpipeline;
 
-import ca.uol.aig.fts.io.NDFIO;
+import ca.uol.aig.fts.io.DataIO;
 import ca.uol.aig.fts.fitting.CubicSplineInterpolation;
 import ca.uol.aig.fts.phasecorrection.PhaseCorrection;
 import ca.uol.aig.fftpack.RealDoubleFFT_Even;
@@ -19,7 +19,7 @@ public class DRPipelineDebug
       int dsSize, ssSize, pcfSize_h, fittingDegree;
       double weight_limit, zpd_value;
       double[] mirrorPos;
-      NDFIO ndf_ifgm;
+      DataIO ndf_ifgm;
       double[][][] ifgm_pc;
 
       /**
@@ -66,7 +66,7 @@ public class DRPipelineDebug
       /* this subroutine is used for the purpose of debug */
       public DRPipelineDebug(String in, int pcfSize_h, int dsSize, int ssSize, 
                         int fittingDegree, double weight_limit, 
-                        double wn_lBound_percent, double wn_uBound_percent)
+                        double wn_lBound_percent, double wn_uBound_percent, String instrument)
       {
             this.dsSize = dsSize;
             this.ssSize = ssSize;
@@ -90,10 +90,10 @@ public class DRPipelineDebug
 
             /* get the raw data from an interferogram file,
             */
-            ndf_ifgm = new NDFIO(in);
+            ndf_ifgm = getDataIO(in, null, instrument);
 
             /* get the original irregular mirror positions */
-            mirrorPos = ndf_ifgm.getMirrorPos();
+            mirrorPos = ndf_ifgm.getOPD();
             mirror_pos_orig_debug = mirrorPos;
 
             csi2fts = new CubicSplineInterpolation(mirrorPos);
@@ -125,6 +125,7 @@ public class DRPipelineDebug
             /* interpolation of interferograms */
             double[] single_ifgm;
             single_ifgm = ndf_ifgm.getInterferogram(index_w, index_l);
+
             ifgm_orig_debug = single_ifgm;
 
             double[] ifgm_interp = csi2fts.interpolate(single_ifgm);
@@ -151,4 +152,37 @@ public class DRPipelineDebug
 
             spectrum_debug = ifgm_pc;
       }
+
+      /* get a DataIO object for an instrument
+       * @param in the path of the input file
+       * @param out the path of the output file
+       * @param instrument the instrument
+       */
+      private DataIO getDataIO(String in, String out, String instrument)
+      {
+            DataIO dataIO = null;
+            try
+            {
+                dataIO = (DataIO)Class.forName("ca.uol.aig.fts.io." + instrument + "IO").newInstance();
+                dataIO.init(in, out);
+            }
+            catch(ClassNotFoundException e)
+            {
+                System.out.println(e);
+            }
+            catch(InstantiationException e)
+            {
+                System.out.println(e);
+            }
+            catch(IllegalAccessException e)
+            {
+                System.out.println(e);
+            }
+            catch(IllegalArgumentException e)
+            {
+                System.out.println(e);
+            }
+            return dataIO;
+      }
+
 }

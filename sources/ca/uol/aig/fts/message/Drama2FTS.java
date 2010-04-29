@@ -126,7 +126,8 @@ class DataReductionAction implements DramaTask.Action
                                        DataReductionParameters.pc_wn_lBound_percent,
                                        DataReductionParameters.pc_wn_uBound_percent,
                                        DataReductionParameters.pc_deglitch,
-                                       DataReductionParameters.pc_numThread); 
+                                       DataReductionParameters.pc_numThread,
+                                       "Scuba2NDF"); 
         t.MsgOut("   Phase Correction : dsSize = "  + dp.pc_dsSize 
                                    + ", ssSize = "  + dp.pc_ssSize 
                                    + ", pcfSize = " + dp.pc_pcfSize);

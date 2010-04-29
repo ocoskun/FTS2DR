@@ -207,10 +207,12 @@ public class DRTuneup
                      + ":[Weight limit(%):" + curr_weight_limit*100 + "]"
                      + ":[Fitting:" + curr_fittingDegree + "]";
 
+/*
 if(curr_phaseFittingStdErr_debug > 0.5)
 {
     System.out.println(index_w + ":" + index_h);
 }
+*/
           noticeBoard.setText(info_str);
           current_WidthIndex = index_w;
           current_HeightIndex = index_h;
@@ -844,7 +846,7 @@ if(curr_phaseFittingStdErr_debug > 0.5)
          {
               drp = new DRPipelineDebug(rawNDFFile, para_pcfSize_h, para_dsSize, 
                            para_ssSize, para_fittingDegree, para_weight_limit, 
-                           para_wn_lBound_percent, para_wn_uBound_percent);
+                           para_wn_lBound_percent, para_wn_uBound_percent, "Scuba2NDF");
 
               curr_pcfSize_h = para_pcfSize_h;
               curr_dsSize = para_dsSize;

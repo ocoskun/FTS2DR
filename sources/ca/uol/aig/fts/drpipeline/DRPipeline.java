@@ -1,6 +1,6 @@
 package ca.uol.aig.fts.drpipeline;
 
-import ca.uol.aig.fts.io.NDFIO;
+import ca.uol.aig.fts.io.DataIO;
 import ca.uol.aig.fts.fitting.CubicSplineInterpolation;
 import ca.uol.aig.fts.phasecorrection.PhaseCorrection;
 import ca.uol.aig.fftpack.RealDoubleFFT_Even;
@@ -21,10 +21,11 @@ public class DRPipeline
       double wn_lBound_percent, wn_uBound_percent;
       int deglitching_flag;
       double[] mirrorPos;
-      NDFIO ndf_ifgm;
+      DataIO ndf_ifgm;
       double[][][] ifgm_pc;
       double[][] phaseFitting_stderr = null;
 
+      String instrument = null;
       /**
        * The exact size of the double-sided interferogram used in PhaseCorrection.
        * PhaseCorrection will use initial values of ZPD_value, dsSize, ssSize and
@@ -65,13 +66,16 @@ public class DRPipeline
        *        2: only deglitch the tail part;
        *        3: deglitch both of the core part and the tail part.
        *      other values: no deglitching.
+       * @param instrument For FTS-2, instrument = 'Scuba2NDF'.
        */
       public DRPipeline(String in, String out, int pcfSize_h, 
                         int dsSize, int ssSize, int fittingDegree, 
                         double weight_limit, double ZPD_value, 
                         double wn_lBound_percent, double wn_uBound_percent,
-                        int deglitching_flag)
+                        int deglitching_flag, String instrument)
       {
+            this.instrument = instrument;
+
             this.dsSize = dsSize;
             this.ssSize = ssSize;
             this.pcfSize_h = pcfSize_h;
@@ -112,6 +116,7 @@ public class DRPipeline
        *        2: only deglitch the tail part;
        *        3: deglitch both of the core part and the tail part.
        *      other values: no deglitching.
+       * @param instrument For FTS-2, instrument = 'Scuba2NDF'.
        * <br>
        * In this constructor,  ZPD_value = 0.
        */
@@ -119,8 +124,10 @@ public class DRPipeline
                         int dsSize, int ssSize, int fittingDegree,
                         double weight_limit, 
                         double wn_lBound_percent, double wn_uBound_percent,
-                        int deglitching_flag)
+                        int deglitching_flag, String instrument)
       {
+            this.instrument = instrument;
+
             this.dsSize = dsSize;
             this.ssSize = ssSize;
             this.pcfSize_h = pcfSize_h;
@@ -166,14 +173,17 @@ public class DRPipeline
        *        3: deglitch both of the core part and the tail part.
        *      other values: no deglitching.
        * @param numThread the number of the computing threads.
+       * @param instrument For FTS-2, instrument = 'Scuba2NDF'.
        */
       public DRPipeline(String in, String out, int pcfSize_h,
                         int dsSize, int ssSize, int fittingDegree,
                         double weight_limit, double ZPD_value, 
                         double wn_lBound_percent, double wn_uBound_percent,
                         int deglitching_flag,
-                        int numThread)
+                        int numThread, String instrument)
       {
+            this.instrument = instrument;
+
             this.dsSize = dsSize;
             this.ssSize = ssSize;
             this.pcfSize_h = pcfSize_h;
@@ -216,6 +226,7 @@ public class DRPipeline
        *        3: deglitch both of the core part and the tail part.
        *      other values: no deglitching.
        * @param numThread the number of the computing threads.
+       * @param instrument For FTS-2, instrument = 'Scuba2NDF'.
        *
        * <br>
        * In this constructor, ZPD_value = 0.
@@ -225,8 +236,10 @@ public class DRPipeline
                         double weight_limit, 
                         double wn_lBound_percent, double wn_uBound_percent,
                         int deglitching_flag,
-                        int numThread)
+                        int numThread, String instrument)
       {
+            this.instrument = instrument;
+
             this.dsSize = dsSize;
             this.ssSize = ssSize;
             this.pcfSize_h = pcfSize_h;
@@ -251,6 +264,38 @@ public class DRPipeline
             dataReduction(in, out, numThread);
       }
 
+      /* get a DataIO object for an instrument 
+       * @param in the path of the input file
+       * @param out the path of the output file
+       * @param instrument the instrument
+       */
+      private DataIO getDataIO(String in, String out, String instrument)
+      {
+            DataIO dataIO = null;
+            try
+            {
+                dataIO = (DataIO)Class.forName("ca.uol.aig.fts.io." + instrument + "IO").newInstance();
+                dataIO.init(in, out);
+            }
+            catch(ClassNotFoundException e) 
+            {
+                System.out.println(e);
+            } 
+            catch(InstantiationException e) 
+            {
+                System.out.println(e);
+            } 
+            catch(IllegalAccessException e) 
+            {
+                System.out.println(e);
+            } 
+            catch(IllegalArgumentException e) 
+            {
+                System.out.println(e);
+            } 
+            return dataIO;
+      }
+
       /* this subroutine is used to test individual modules of data reduction */
       private void test_dataReduction(String in, String out)
       {
@@ -259,10 +304,11 @@ public class DRPipeline
             */
             long t0 = System.currentTimeMillis();
 
-            ndf_ifgm = new NDFIO(in, out);
+//            ndf_ifgm = new NDFIO(in, out);
+             ndf_ifgm = getDataIO(in, out, instrument);
 
             /* get the original irregular mirror positions */
-            mirrorPos = ndf_ifgm.getMirrorPos();
+            mirrorPos = ndf_ifgm.getOPD();
 
             long t1 = System.currentTimeMillis();
             System.out.println("Read Time : " + (t1 - t0));
@@ -339,24 +385,7 @@ public class DRPipeline
             System.out.println("FFT Time : " + (t4 - t3));
 
             /* save the spectrum to a file */
-
-            int arraySize = arrayWidth * arrayLength;
-            int nPoints_Spectrum = ifgm_pc[0][0].length;
-            int cubeSize = arraySize * nPoints_Spectrum; 
-            float[] cube_spectrum = new float[cubeSize];
-            int index = 0;
-            for(int k = 0; k < nPoints_Spectrum; k++)
-               for(int j=0; j<arrayLength; j++)
-                  for(int i=0; i<arrayWidth; i++)
-                  {
-                        cube_spectrum[index] = (float)ifgm_pc[i][j][k];
-                        index++;
-                  }
-            long[] spectrum_cube_shape = new long[3];
-            spectrum_cube_shape[0] = arrayWidth;
-            spectrum_cube_shape[1] = arrayLength;
-            spectrum_cube_shape[2] = nPoints_Spectrum;
-            ndf_ifgm.saveSpectrum(cube_spectrum, spectrum_cube_shape);
+            ndf_ifgm.saveSpectrum(ifgm_pc);
 
             ndf_ifgm.closeSpectrum();
 
@@ -371,10 +400,11 @@ public class DRPipeline
             /* get the raw data from an interferogram file,
              *  create a new spectrum file
              */
-            ndf_ifgm = new NDFIO(in, out);
+//            ndf_ifgm = new NDFIO(in, out);
+            ndf_ifgm = getDataIO(in, out, instrument);
 
             /* get the original irregular mirror positions */
-            mirrorPos = ndf_ifgm.getMirrorPos();
+            mirrorPos = ndf_ifgm.getOPD();
 
 
             /* interpolation, phase-correction, and FFT of interferograms */
@@ -442,10 +472,11 @@ public class DRPipeline
             /* get the raw data from an interferogram file,
                create a new spectrum file
             */
-            ndf_ifgm = new NDFIO(in, out);
+//            ndf_ifgm = new NDFIO(in, out);
+            ndf_ifgm = getDataIO(in, out, instrument);
 
             /* get the original irregular mirror positions */
-            mirrorPos = ndf_ifgm.getMirrorPos();
+            mirrorPos = ndf_ifgm.getOPD();
 
             /* interpolation, phase-correction, and FFT of interferograms */
             int arrayWidth = ndf_ifgm.get_arrayWidth();
@@ -525,22 +556,7 @@ public class DRPipeline
       /* save the spectrum to a data file */
       private void saveSpectrum()
       {
-            int cubeSize = ifgm_pc.length * ifgm_pc[0].length * ifgm_pc[0][0].length; 
-            float[] cube_spectrum = new float[cubeSize];
-            int index = 0;
-            /* convert the spectrum cube from 3-d data format to 1-d data format */
-            for(int k = 0; k < ifgm_pc[0][0].length; k++)
-               for(int j=0; j<ifgm_pc[0].length; j++)
-                  for(int i=0; i<ifgm_pc.length; i++)
-                  {
-                        cube_spectrum[index] = (float)ifgm_pc[i][j][k];
-                        index++;
-                  }
-            long[] spectrum_cube_shape = new long[3];
-            spectrum_cube_shape[0] = ifgm_pc.length;
-            spectrum_cube_shape[1] = ifgm_pc[0].length;
-            spectrum_cube_shape[2] = ifgm_pc[0][0].length;
-            ndf_ifgm.saveSpectrum(cube_spectrum, spectrum_cube_shape);
+            ndf_ifgm.saveSpectrum(ifgm_pc);
 
             ndf_ifgm.closeSpectrum();
       }
