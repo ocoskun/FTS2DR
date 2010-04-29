@@ -49,6 +49,12 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 
+/**
+ * Tune-up tool software for FTS-2
+ * @author Baoshe Zhang
+ * @author Astronomial Instrument Group of UoL
+ */
+
 public class DRTuneup
 {
      /* various controls */
@@ -84,6 +90,9 @@ public class DRTuneup
      boolean pauseDR_flag = false;
      boolean stopDR_flag = true;
 
+     /* flags used to control data reduction */
+     boolean deglitch_flag = true;
+
      /* range of the pixels */
      int array_widthStart = 0, array_widthEnd = 0;
      int array_heightStart = 0, array_heightEnd = 0;
@@ -94,6 +103,9 @@ public class DRTuneup
      /* the current pixel */
      int current_WidthIndex = array_widthStart;
      int current_HeightIndex = array_heightEnd;
+
+     /* temporary file prefix for Gnuplot */
+     String tmp_prefix = ".tmp_fts2_aig";
 
      /* the current result from data reduction */
 
@@ -115,7 +127,7 @@ public class DRTuneup
      /* show the DR result of pixel(index_w, index_h) */
      void showDRResult(int index_w, int index_h)
      {
-          drp.dataReduction_Debug(index_w, index_h);
+          drp.dataReduction_Debug(index_w, index_h, deglitch_flag);
 
           try
           {
@@ -245,7 +257,7 @@ public class DRTuneup
           drFrame.pack();
           drFrame.setVisible(true);
 //        drFrame.setIconImage(Toolkit.getDefaultToolkit().getImage("DRTuneup.png"));
-          drFrame.setIconImage(createImageIcon("DRTuneup.png"));
+          drFrame.setIconImage(createImageIcon("img/DRTuneup.png"));
           drFrame.addWindowListener(new WindowEventDRFrame());
           drFrame.addComponentListener(new ComponentEventDRFrame());
           displayPanel.addMouseListener(new MouseEventDRFrame());
@@ -291,6 +303,16 @@ public class DRTuneup
          menu.add(menuItem);
 
          menu.addSeparator();
+
+
+         menuItem = new JMenuItem("Show the current result in Gnuplot", KeyEvent.VK_G);
+         menuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_G,
+                        ActionEvent.ALT_MASK));
+         menuItem.addActionListener(menuEvent);
+         menu.add(menuItem);
+
+         menu.addSeparator();
+
          
          menuItem = new JMenuItem("Exit", KeyEvent.VK_X);
          menuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_X,
@@ -306,13 +328,20 @@ public class DRTuneup
          menu.add(cbMenuItem);         
          menuBar.add(menu);
 
+         menu.addSeparator();
+         cbMenuItem = new JCheckBoxMenuItem("Deglitching", true);
+         cbMenuItem.setMnemonic(KeyEvent.VK_D);
+         cbMenuItem.addItemListener(cbEvent);
+         menu.add(cbMenuItem);
+         menuBar.add(menu);
+
          menu = new JMenu("Tools");
          menu.setMnemonic(KeyEvent.VK_T);
          menuBar.add(menu);
 
          menuItem = new JMenuItem("Run", KeyEvent.VK_R);
          startDR_menuItem = menuItem;
-         startDR_menuItem.setEnabled(true);
+         startDR_menuItem.setEnabled(false);
 
          menuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R,
                         ActionEvent.ALT_MASK));
@@ -396,11 +425,16 @@ public class DRTuneup
                         String fileName = file.getAbsolutePath();
                         int index = fileName.lastIndexOf('.');
                         rawNDFFile = fileName.substring(0, index);
+                        startDR_menuItem.setEnabled(true);
                     }
               }
               else if(menuName.equals("Save the current result ..."))
               {
                     saveCurrentResult();
+              }
+              else if(menuName.equals("Show the current result in Gnuplot"))
+              {
+                    showInGnuplot();
               }
               else if(menuName.equals("Run"))
               {
@@ -532,6 +566,13 @@ public class DRTuneup
                    }
                    displayPanel.revalidate();
               }
+              else if("Deglitching".equals(source.getText()))
+              {
+                  if(e.getStateChange() == ItemEvent.SELECTED)
+                        deglitch_flag = true;
+                  else
+                        deglitch_flag = false;
+              }
          }
     }
 
@@ -615,6 +656,12 @@ public class DRTuneup
          {
               File file = fc.getSelectedFile();
               outFile_prefix = file.getAbsolutePath();
+              saveResultToFile(outFile_prefix);
+         }
+    }
+    void saveResultToFile(String outFile_prefix)
+    {
+         {
               try
               {
                     String str;
@@ -703,6 +750,41 @@ public class DRTuneup
               {
                     io_error.printStackTrace();
               }
+         }
+    }
+    void showInGnuplot()
+    {
+         if(curr_phase_fitting_debug == null) return;
+         if(pauseDR_flag == false && stopDR_flag == false)
+         {
+              JOptionPane.showMessageDialog(drFrame,
+                       "Pause or stop the data reduction !!!",
+                       "Warning", JOptionPane.WARNING_MESSAGE);
+
+              return;
+         }
+
+         try
+         {
+              saveResultToFile(tmp_prefix);
+              (new File(tmp_prefix + "_info.dat")).deleteOnExit();
+              (new File(tmp_prefix + "_ifgm_orig.dat")).deleteOnExit();
+              (new File(tmp_prefix + "_ifgm_interp.dat")).deleteOnExit();
+              (new File(tmp_prefix + "_phase.dat")).deleteOnExit();
+              (new File(tmp_prefix + "_pcf.dat")).deleteOnExit();
+              (new File(tmp_prefix + "_spectrum.dat")).deleteOnExit();
+              Runtime.getRuntime().exec("gnuplot -persist " 
+                        + DRTuneup.class.getResource("gnuplot/fts2_phase.gnu").getFile());
+              Runtime.getRuntime().exec("gnuplot -persist "
+                        + DRTuneup.class.getResource("gnuplot/fts2_ifgm.gnu").getFile());
+              Runtime.getRuntime().exec("gnuplot -persist "
+                        + DRTuneup.class.getResource("gnuplot/fts2_pcf.gnu").getFile());
+              Runtime.getRuntime().exec("gnuplot -persist "
+                        + DRTuneup.class.getResource("gnuplot/fts2_spectrum.gnu").getFile());
+         }
+         catch(IOException e)
+         {
+              e.printStackTrace();
          }
     }
 

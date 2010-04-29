@@ -4,6 +4,8 @@ import ca.uol.aig.fts.io.NDFIO;
 import ca.uol.aig.fts.fitting.CubicSplineInterpolation;
 import ca.uol.aig.fts.phasecorrection.PhaseCorrection;
 import ca.uol.aig.fftpack.RealDoubleFFT_Even;
+import ca.uol.aig.fts.deglitch.Deglitching;
+
 /**
  * DRPipeline acts as a data reduction pipeline. It will intergrate 
  * Interferogram/Spectrum I/O, Interpolation, PhaseCorrection,
@@ -41,6 +43,8 @@ public class DRPipelineDebug
        */
       public int pc_pcfSize;
 
+      public int zpd_index; 
+
       public double[] mirror_pos_orig_debug = null;
       public double[] ifgm_orig_debug = null;
       public double[] mirror_pos_interp_debug = null;
@@ -56,6 +60,7 @@ public class DRPipelineDebug
       CubicSplineInterpolation csi2fts = null;
       PhaseCorrection pc2fts = null;
       RealDoubleFFT_Even fft2fts = null; 
+      Deglitching deglitch2fts = null;
 
       /* this subroutine is used for the purpose of debug */
       public DRPipelineDebug(String in, int pcfSize_h, int dsSize, int ssSize, 
@@ -95,9 +100,11 @@ public class DRPipelineDebug
             int new_ssSize = pc2fts.get_ssLength();
             fft2fts = new RealDoubleFFT_Even(new_ssSize+1);
 
+            int tail_starting = index_ZPD + 2*dsSize;
+            deglitch2fts = new Deglitching(tail_starting);
       }
       
-      public void dataReduction_Debug(int index_w, int index_l)
+      public void dataReduction_Debug(int index_w, int index_l, boolean deglitch_flag)
       {
             /* interpolation of interferograms */
             double[] single_ifgm;
@@ -105,6 +112,7 @@ public class DRPipelineDebug
             ifgm_orig_debug = single_ifgm;
 
             double[] ifgm_interp = csi2fts.interpolate(single_ifgm);
+            if(deglitch_flag) deglitch2fts.deglitch(ifgm_interp);
             ifgm_interp_debug = ifgm_interp;
 
             double[] fittingStderr = new double[1];

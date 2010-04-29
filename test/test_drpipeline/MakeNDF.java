@@ -7,8 +7,8 @@ import java.io.*;
 public class MakeNDF 
 {
 
-     int arrayWidth = 4;
-     int arrayLength = 4;
+     int arrayWidth = 40;
+     int arrayLength = 32;
      double x_interval = 0.1;
 
      HDSObject hdsInterferogram;
@@ -182,14 +182,14 @@ public class MakeNDF
            final int nPoints_Ifgm = DS_LEN + SS_LEN + PCF_LEN;
            final int LEFT_SHIFT = DS_LEN;
 
-           final double NS_Ratio = 0.2*0;
-           final double POS_FLUC = 0.1*0;
+           final double NS_Ratio = 0.2;
+           final double POS_FLUC = 0.1;
            final double d0 = 0.1*(2.0*Math.PI);
            final double d1 = 1.7; 
            final double d2 = 2.5;
            
            final double glitch_starting = 1000;
-           final double glitch_endding = 1200;
+           final double glitch_endding = 1800;
  
            final boolean Reverse = true;
 
@@ -280,7 +280,7 @@ public class MakeNDF
                 {
                      f1 = (0+jjj*fac) * Math.PI / SS_LEN;
                      p1 = d0 + d1 * f1 + d2 * f1 *f1;
-                     a1 = 20.0;
+                     a1 = 5.0;
                      cc += a1*Math.cos(f1*x + p1);
                      cc0 += a1*Math.cos(f1*x0);
                 }
@@ -295,7 +295,7 @@ public class MakeNDF
                      {
                         f1 = (500+jjj*fac) * Math.PI / SS_LEN;
                         p1 = d0 + d1 * f1 + d2 * f1 *f1;
-                        a1 = 100*f1*f1;
+                        a1 = 200*f1*f1;
                         glitch_err += a1*Math.cos(f1*x + p1);
                         glitch_err0 += a1*Math.cos(f1*x0);
                      }
